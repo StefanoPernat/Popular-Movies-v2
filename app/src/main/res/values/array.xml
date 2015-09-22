@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="pref_order_label">
+        <item>Popularity</item>
+        <item>Highest Rated</item>
+    </array>
+
+    <array name="pref_order_values">
+        <item>popularity.desc</item>
+        <item>vote_average.desc</item>
+        <!--<item>vote_count.desc</item>-->
+    </array>
+</resources>
