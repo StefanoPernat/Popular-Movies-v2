@@ -39,16 +39,24 @@ public class MovieDetailFragment extends Fragment {
             selectedMovie = intent.getParcelableExtra(Intent.EXTRA_TEXT);
         }
 
-        Toast.makeText(getActivity(),selectedMovie.toString(),Toast.LENGTH_LONG).show();
+        Toast.makeText(getActivity(), selectedMovie.toString(), Toast.LENGTH_LONG).show();
 
         ImageView backdropImageView = (ImageView) rootView.findViewById(R.id.backdrop_imageview);
-        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+        Picasso.with(getActivity()).load(buildBackdropPath()).into(backdropImageView);
+        backdropImageView.setScaleType(ImageView.ScaleType.FIT_XY);
+
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            Picasso.with(getActivity()).load(buildBackdropPathForLandscape()).into(backdropImageView);
+            backdropImageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        }
+
+        /*
             Picasso.with(getActivity()).load(buildBackdropPath()).into(backdropImageView);
             backdropImageView.setScaleType(ImageView.ScaleType.FIT_XY);
         }
         else {
             Picasso.with(getActivity()).load(buildPosterPath()).into(backdropImageView);
-        }
+        }*/
 
         TextView titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
         titleTextView.setText(selectedMovie.getTitle());
@@ -90,7 +98,7 @@ public class MovieDetailFragment extends Fragment {
         return null;
     }
 
-    private String buildPosterPath(){
+    private String buildBackdropPathForLandscape(){
         if(selectedMovie != null) {
             Uri builtUri = Uri.parse(MOVIE_BACKDROP_BASE_URI).buildUpon()
                     .appendPath("w500")
