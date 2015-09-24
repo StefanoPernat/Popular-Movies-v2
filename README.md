@@ -16,6 +16,7 @@ I choose to implement the [MovieDB API Call](http://api.themoviedb.org/3/discove
 6. _Fixed_ GridView spacing **[COMPLETED]**
 7. Basic UI for Detail Activity **[COMPLETED]**
 8. Improved UI for Detail Activity (landscape mode) **[COMPLETED]**
+9. Deleted logging toast
 
 ##### Notes for Reviewers
 - API key is placed into **strings.xml**

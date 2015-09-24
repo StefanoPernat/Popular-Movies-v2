@@ -39,7 +39,7 @@ public class MovieDetailFragment extends Fragment {
             selectedMovie = intent.getParcelableExtra(Intent.EXTRA_TEXT);
         }
 
-        Toast.makeText(getActivity(), selectedMovie.toString(), Toast.LENGTH_LONG).show();
+        //Toast.makeText(getActivity(), selectedMovie.toString(), Toast.LENGTH_LONG).show();
 
         ImageView backdropImageView = (ImageView) rootView.findViewById(R.id.backdrop_imageview);
         Picasso.with(getActivity()).load(buildBackdropPath()).into(backdropImageView);

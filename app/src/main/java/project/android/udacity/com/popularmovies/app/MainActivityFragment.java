@@ -57,7 +57,7 @@ public class MainActivityFragment extends Fragment implements DownloadReceiver.R
     @Override
     public void onResume() {
         super.onResume();
-        Toast.makeText(getActivity(),"resumed", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getActivity(),"resumed", Toast.LENGTH_SHORT).show();
 
         mReceiver = new DownloadReceiver(new Handler());
         mReceiver.setReceiver(MainActivityFragment.this);
@@ -82,7 +82,7 @@ public class MainActivityFragment extends Fragment implements DownloadReceiver.R
                 mGridView.setVisibility(View.VISIBLE);
 
 
-                Toast.makeText(getActivity(),"Running",Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getActivity(),"Running",Toast.LENGTH_SHORT).show();
                 mProgressDialog = ProgressDialog.show(
                                     getActivity(),
                                     null,
@@ -96,7 +96,7 @@ public class MainActivityFragment extends Fragment implements DownloadReceiver.R
                 mMessageTextView.setVisibility(View.GONE);
                 mGridView.setVisibility(View.VISIBLE);
 
-                Toast.makeText(getActivity(),"Finished",Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getActivity(),"Finished",Toast.LENGTH_SHORT).show();
                 if(!(mProgressDialog == null)){
                     mProgressDialog.dismiss();
                 }
@@ -118,8 +118,8 @@ public class MainActivityFragment extends Fragment implements DownloadReceiver.R
                 break;
             }
             case MovieService.STATUS_ERROR: {
-                Toast.makeText(getActivity(),"Error",Toast.LENGTH_SHORT).show();
-                //progressDialog.dismiss();
+                //Toast.makeText(getActivity(),"Error",Toast.LENGTH_SHORT).show();
+                //mProgressDialog.dismiss();
                 if(!(mProgressDialog == null)){
                     mProgressDialog.dismiss();
                 }
