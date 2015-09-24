@@ -40,7 +40,7 @@ public class MovieAdapter extends ArrayAdapter<Movie> {
                     .appendPath("w185")
                     .appendPath(movie.getPoster()).build();
 
-        Log.e(LOG_TAG, mPosterUri.toString());
+        //Log.e(LOG_TAG, mPosterUri.toString());
 
         if(convertView == null){
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.movie_item,parent, false);

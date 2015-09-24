@@ -96,7 +96,7 @@ public class MovieService extends IntentService {
                         .appendQueryParameter("sort_by",order)
                         .appendQueryParameter("vote_count.gte","500").build();
 
-        Log.e(LOG_TAG, builtUri.toString());
+        //Log.e(LOG_TAG, builtUri.toString());
 
         try {
             URL moviesUrl = new URL(builtUri.toString());
@@ -126,7 +126,7 @@ public class MovieService extends IntentService {
 
         }
         catch (IOException e){
-            Log.e(LOG_TAG, e.getMessage(), e);
+            //Log.e(LOG_TAG, e.getMessage(), e);
         }
         finally {
             if (urlConnection != null){
@@ -138,7 +138,7 @@ public class MovieService extends IntentService {
                     reader.close();
                 }
                 catch (IOException e){
-                    Log.e(LOG_TAG, e.getMessage(), e);
+                    //Log.e(LOG_TAG, e.getMessage(), e);
                 }
 
             }
@@ -185,12 +185,12 @@ public class MovieService extends IntentService {
                         title
                 );
 
-                Log.e(LOG_TAG, movie.toString());
+                //Log.e(LOG_TAG, movie.toString());
                 movies.add(movie);
             }
         }
         catch (JSONException e){
-            Log.e(LOG_TAG, e.getMessage(), e);
+            //Log.e(LOG_TAG, e.getMessage(), e);
         }
 
         return movies;
