@@ -1,10 +1,9 @@
-package project.android.udacity.com.popularmovies.app.services;
+package project.android.udacity.com.popularmovies.app.task;
 
-import android.app.IntentService;
-import android.content.Intent;
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.ResultReceiver;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -17,22 +16,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.List;
 
-import project.android.udacity.com.popularmovies.app.R;
 import project.android.udacity.com.popularmovies.app.model.Movie;
-import project.android.udacity.com.popularmovies.app.receivers.DownloadReceiver;
 
 /**
- * Created by stefanopernat on 14/09/15.
- *
- * MovieService is an Intent Service that make an HTTP call to moviedb API to get
- * data about Movies
+ * Created by stefanopernat on 25/09/15.
  */
-public class MovieService extends IntentService {
-    private final String LOG_TAG = MovieService.class.getSimpleName();
+public class FetchMovieTask extends AsyncTask<String, Void, ArrayList<Movie>> {
+    private final String LOG_TAG = FetchMovieTask.class.getSimpleName();
 
     //base url
     private final String MOVIES_BASE_URL =
@@ -49,54 +41,32 @@ public class MovieService extends IntentService {
     private final String JSON_VOTE_AVERAGE = "vote_average";
     private final String JSON_BACKDROP = "backdrop_path";
 
-    //possible status
-    public static final int STATUS_RUNNING = 1;
-    public static final int STATUS_FINISHED = 2;
-    public static final int STATUS_ERROR = -1;
-
-    public MovieService(){
-        super(MovieService.class.getCanonicalName());
-    }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
-        Log.e(LOG_TAG, "Service started....");
-        /*String jsonResult = getMovieJson(R.string.api_key);
-        Log.e(LOG_TAG, jsonResult);
-        List<Movie> temp = parseJsonResult(jsonResult);
-        Log.e(LOG_TAG, ""+temp.size());*/
+    protected ArrayList<Movie> doInBackground(String... params) {
+        final String apiKey = ((params == null || params.length != 2) ? "" : params[0]);
+        final String selectedOrder = ((params == null || params.length != 2) ? "" : params[1]);
 
-        final ResultReceiver receiver = intent.getParcelableExtra(DownloadReceiver.MOVIES_EXTRA);
-        final String selectedOrder = intent.getStringExtra(getString(R.string.pref_order_key));
-
-        Bundle bundle = new Bundle();
-
-        receiver.send(STATUS_RUNNING,Bundle.EMPTY);
-
-        String jsonString = getMovieJson(R.string.api_key, selectedOrder);
-        ArrayList<Movie> movies = parseJsonResult(jsonString);
-        if(movies == null || movies.size() == 0){
-            receiver.send(STATUS_ERROR, Bundle.EMPTY);
-        }
-        else {
-            bundle.putParcelableArrayList(Intent.EXTRA_TEXT, movies);
-            receiver.send(STATUS_FINISHED, bundle);
+        if(apiKey == "" || selectedOrder == ""){
+            return null;
         }
 
-        this.stopSelf();
+        //Log.e(LOG_TAG, apiKey);
+
+        String jsonString = getMovieJson(apiKey,selectedOrder);
+        return parseJsonResult(jsonString);
     }
 
-    private String getMovieJson(int apiKeyResource, String order){
-        String apiKey = getString(apiKeyResource);
+    private String getMovieJson(String apiKeyResource, String order){
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
 
         Uri builtUri = Uri.parse(MOVIES_BASE_URL).buildUpon()
-                        .appendQueryParameter("api_key",apiKey)
-                        .appendQueryParameter("sort_by",order)
-                        .appendQueryParameter("vote_count.gte","500").build();
+                .appendQueryParameter("api_key",apiKeyResource)
+                .appendQueryParameter("sort_by",order)
+                .appendQueryParameter("vote_count.gte","500").build();
 
-        //Log.e(LOG_TAG, builtUri.toString());
+        Log.e(LOG_TAG, builtUri.toString());
 
         try {
             URL moviesUrl = new URL(builtUri.toString());
@@ -126,7 +96,7 @@ public class MovieService extends IntentService {
 
         }
         catch (IOException e){
-            //Log.e(LOG_TAG, e.getMessage(), e);
+            Log.e(LOG_TAG, e.getMessage(), e);
         }
         finally {
             if (urlConnection != null){
@@ -138,7 +108,7 @@ public class MovieService extends IntentService {
                     reader.close();
                 }
                 catch (IOException e){
-                    //Log.e(LOG_TAG, e.getMessage(), e);
+                    Log.e(LOG_TAG, e.getMessage(), e);
                 }
 
             }
@@ -190,7 +160,7 @@ public class MovieService extends IntentService {
             }
         }
         catch (JSONException e){
-            //Log.e(LOG_TAG, e.getMessage(), e);
+            Log.e(LOG_TAG, e.getMessage(), e);
         }
 
         return movies;

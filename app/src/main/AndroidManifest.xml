@@ -26,9 +26,9 @@
                 android:value=".MainActivity" />
         </activity>
 
-        <service
+        <!--<service
             android:name=".services.MovieService"
-            android:exported="false" />
+            android:exported="false" />-->
 
         <activity
             android:name=".MovieDetailActivity"

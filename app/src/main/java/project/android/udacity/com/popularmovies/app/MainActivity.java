@@ -1,5 +1,6 @@
 package project.android.udacity.com.popularmovies.app;
 
+import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -18,6 +19,15 @@ public class MainActivity extends AppCompatActivity {
         //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        /*if(savedInstanceState == null){
+            getSupportFragmentManager().beginTransaction().add(R.id.fragment, new MainActivityFragment()).commit();
+        }*/
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
     }
 
     @Override
@@ -43,4 +53,6 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    //private Fragment createFragment()
 }

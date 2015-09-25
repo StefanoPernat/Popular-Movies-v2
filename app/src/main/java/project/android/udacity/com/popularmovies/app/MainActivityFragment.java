@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,22 +21,29 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import project.android.udacity.com.popularmovies.app.adapter.MovieAdapter;
 import project.android.udacity.com.popularmovies.app.model.Movie;
-import project.android.udacity.com.popularmovies.app.receivers.DownloadReceiver;
-import project.android.udacity.com.popularmovies.app.services.MovieService;
+import project.android.udacity.com.popularmovies.app.task.FetchMovieTask;
 
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment implements DownloadReceiver.Receiver{
+public class MainActivityFragment extends Fragment {
+
+    private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
+    private final String STATE_PREFERRED_ORDER = "state.order";
+    private final String STATE_MOVIES = "state.movies";
 
     private GridView mGridView;
     private TextView mMessageTextView;
-    private ArrayAdapter mAdapter;
-    private DownloadReceiver mReceiver;
-    private ProgressDialog mProgressDialog = null;
+    private ArrayList<Movie> mMovies = new ArrayList<>();
+    private MovieAdapter mMovieAdapter;
+
+
+    private String mSelectedOrder;
 
     public MainActivityFragment() {
     }
@@ -45,96 +53,92 @@ public class MainActivityFragment extends Fragment implements DownloadReceiver.R
                              Bundle savedInstanceState) {
         //getActivity().requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
+        //super.onCreateView(inflater,container,savedInstanceState);
+
         View viewRoot = inflater.inflate(R.layout.fragment_main, container, false);
 
         mGridView = (GridView) viewRoot.findViewById(R.id.moviesGridView);
         mMessageTextView = (TextView) viewRoot.findViewById(R.id.message_textview);
         mMessageTextView.setVisibility(View.GONE);
 
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Movie selected = mMovieAdapter.getItem(position);
+                Intent movieDetailIntent = new Intent(getActivity(), MovieDetailActivity.class);
+                movieDetailIntent.putExtra(Intent.EXTRA_TEXT,selected);
+                startActivity(movieDetailIntent);
+            }
+        });
+
         return viewRoot;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if(savedInstanceState != null) {
+            mSelectedOrder = savedInstanceState.getString(STATE_PREFERRED_ORDER);
+            mMovies = savedInstanceState.getParcelableArrayList(STATE_MOVIES);
+            if (mMovies == null || mMovies.size() == 0){
+                mGridView.setVisibility(View.GONE);
+                mMessageTextView.setVisibility(View.VISIBLE);
+            }
+            else {
+                mGridView.setVisibility(View.VISIBLE);
+                mMessageTextView.setVisibility(View.GONE);
+                mMovieAdapter = new MovieAdapter(getActivity(), mMovies);
+                mGridView.setAdapter(mMovieAdapter);
+            }
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(STATE_PREFERRED_ORDER, mSelectedOrder);
+        outState.putParcelableArrayList(STATE_MOVIES, mMovies);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        //Toast.makeText(getActivity(),"resumed", Toast.LENGTH_SHORT).show();
 
-        mReceiver = new DownloadReceiver(new Handler());
-        mReceiver.setReceiver(MainActivityFragment.this);
-        Intent movieServiceIntent =
-                new Intent(Intent.ACTION_SYNC, null, getActivity(), MovieService.class);
-        movieServiceIntent.putExtra(DownloadReceiver.MOVIES_EXTRA, mReceiver);
-        movieServiceIntent.putExtra(getString(R.string.pref_order_key), getPreferredOrder());
-        getActivity().startService(movieServiceIntent);
-    }
+        Log.e(LOG_TAG, "selectedOrder: " + mSelectedOrder);
+        Log.e(LOG_TAG, "preferredOrder: "+getPreferredOrder());
+        Log.e(LOG_TAG, "current order = preferred order ==> "+(mSelectedOrder == getPreferredOrder()));
 
-    @Override
-    public void onReceiveResult(int resultCode, Bundle resultData) {
-        /*final ProgressDialog progressDialog = new ProgressDialog(getActivity());
-        progressDialog.setMessage(getString(R.string.progressbar_text));
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progressDialog.setIndeterminate(true);*/
-
-        switch (resultCode){
-            case MovieService.STATUS_RUNNING: {
-                mMessageTextView.setText("");
-                mMessageTextView.setVisibility(View.GONE);
-                mGridView.setVisibility(View.VISIBLE);
-
-
-                //Toast.makeText(getActivity(),"Running",Toast.LENGTH_SHORT).show();
-                mProgressDialog = ProgressDialog.show(
-                                    getActivity(),
-                                    null,
-                                    getString(R.string.progressbar_text),
-                                    true
-                );
-                break;
-            }
-            case MovieService.STATUS_FINISHED: {
-                mMessageTextView.setText("");
-                mMessageTextView.setVisibility(View.GONE);
-                mGridView.setVisibility(View.VISIBLE);
-
-                //Toast.makeText(getActivity(),"Finished",Toast.LENGTH_SHORT).show();
-                if(!(mProgressDialog == null)){
-                    mProgressDialog.dismiss();
-                }
-                ArrayList<Movie> movies = resultData.getParcelableArrayList(Intent.EXTRA_TEXT);
-                mAdapter = new MovieAdapter(getActivity(),movies);
-                //mGridView.setStretchMode(GridView.NO_STRETCH);
-                mGridView.setAdapter(mAdapter);
-
-                mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        Movie selectedMovie = (Movie) mAdapter.getItem(position);
-
-                        Intent movieDetailIntent = new Intent(getActivity(),MovieDetailActivity.class);
-                        movieDetailIntent.putExtra(Intent.EXTRA_TEXT, selectedMovie);
-                        startActivity(movieDetailIntent);
+        if(getActivity() != null){
+            if((mSelectedOrder != getPreferredOrder())||(mMovies.size() == 0)){
+                mSelectedOrder = getPreferredOrder();
+                FetchMovieTask movieTask = new FetchMovieTask();
+                try {
+                    mMovies.clear();
+                    ArrayList<Movie> movies = movieTask.execute(getString(R.string.api_key), mSelectedOrder).get();
+                    if(movies == null || movies.size() == 0){
+                        mGridView.setVisibility(View.GONE);
+                        mMessageTextView.setVisibility(View.VISIBLE);
                     }
-                });
-                break;
-            }
-            case MovieService.STATUS_ERROR: {
-                //Toast.makeText(getActivity(),"Error",Toast.LENGTH_SHORT).show();
-                //mProgressDialog.dismiss();
-                if(!(mProgressDialog == null)){
-                    mProgressDialog.dismiss();
+                    else {
+                        mMovies.addAll(movies);
+                        mMovieAdapter = new MovieAdapter(getActivity(), mMovies);
+                        mGridView.setAdapter(mMovieAdapter);
+                        mGridView.setVisibility(View.VISIBLE);
+                        mMessageTextView.setVisibility(View.GONE);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
                 }
 
-                mGridView.setVisibility(View.GONE);
-
-                mMessageTextView.setText(getString(R.string.download_movies_error));
-                mMessageTextView.setVisibility(View.VISIBLE);
-                mMessageTextView.setGravity(Gravity.CENTER_HORIZONTAL);
-                break;
             }
-            default:
-                break;
-        }
 
+            Log.e(LOG_TAG, "selectedOrder: "+mSelectedOrder);
+            Log.e(LOG_TAG, "preferredOrder: "+getPreferredOrder());
+            Log.e(LOG_TAG, "current order = preferred order ==> "+(mSelectedOrder == getPreferredOrder()));
+
+        }
     }
 
     public String getPreferredOrder(){
