@@ -36,6 +36,7 @@ public class MainActivityFragment extends Fragment {
     private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
     private final String STATE_PREFERRED_ORDER = "state.order";
     private final String STATE_MOVIES = "state.movies";
+    public static final String MOVIE_BUNDLE_KEY = "detail.movie.fragment.bundle";
 
     private GridView mGridView;
     private TextView mMessageTextView;
@@ -64,10 +65,31 @@ public class MainActivityFragment extends Fragment {
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                /*
+                    Check if there's the fragment or not if not Launch second activity through intent
+                    else if there's a fragment I will build the bundle to pass the selected movie to the fragment
+                */
+
                 Movie selected = mMovieAdapter.getItem(position);
-                Intent movieDetailIntent = new Intent(getActivity(), MovieDetailActivity.class);
-                movieDetailIntent.putExtra(Intent.EXTRA_TEXT,selected);
-                startActivity(movieDetailIntent);
+                if(getActivity().findViewById(R.id.fragment_detail) == null){
+                    Intent movieDetailIntent = new Intent(getActivity(), MovieDetailActivity.class);
+                    movieDetailIntent.putExtra(Intent.EXTRA_TEXT,selected);
+                    startActivity(movieDetailIntent);
+                }
+                else {
+                    Toast.makeText(getActivity(), "Hi Master Detail", Toast.LENGTH_LONG).show();
+                    Bundle selectedMovieBundle = new Bundle();
+                    selectedMovieBundle.putParcelable(MOVIE_BUNDLE_KEY,selected);
+
+                    // Replace the detail fragment
+                    MovieDetailFragment movieDetailFragment = new MovieDetailFragment();
+                    movieDetailFragment.setArguments(selectedMovieBundle);
+
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_detail,movieDetailFragment)
+                            .commit();
+                }
+
             }
         });
 
@@ -146,4 +168,6 @@ public class MainActivityFragment extends Fragment {
                 PreferenceManager.getDefaultSharedPreferences(getActivity())
                 .getString(getString(R.string.pref_order_key), getString(R.string.pref_order_default));
     }
+
+
 }

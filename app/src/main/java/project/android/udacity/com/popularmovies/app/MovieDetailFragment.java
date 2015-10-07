@@ -38,6 +38,10 @@ public class MovieDetailFragment extends Fragment {
         if(intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
             selectedMovie = intent.getParcelableExtra(Intent.EXTRA_TEXT);
         }
+        else {
+            Bundle arguments = getArguments();
+            selectedMovie = arguments.getParcelable(MainActivityFragment.MOVIE_BUNDLE_KEY);
+        }
 
         //Toast.makeText(getActivity(), selectedMovie.toString(), Toast.LENGTH_LONG).show();
 
@@ -58,20 +62,22 @@ public class MovieDetailFragment extends Fragment {
             Picasso.with(getActivity()).load(buildPosterPath()).into(backdropImageView);
         }*/
 
-        TextView titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
-        titleTextView.setText(selectedMovie.getTitle());
+        if(selectedMovie != null) {
+            TextView titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
+            titleTextView.setText(selectedMovie.getTitle());
 
-        TextView plotTextView = (TextView) rootView.findViewById(R.id.plot_textview);
-        plotTextView.setText(selectedMovie.getPlot());
+            TextView plotTextView = (TextView) rootView.findViewById(R.id.plot_textview);
+            plotTextView.setText(selectedMovie.getPlot());
 
-        TextView releaseDateTextView = (TextView) rootView.findViewById(R.id.release_date_textview);
-        releaseDateTextView.setText(selectedMovie.getReleaseDate());
+            TextView releaseDateTextView = (TextView) rootView.findViewById(R.id.release_date_textview);
+            releaseDateTextView.setText(selectedMovie.getReleaseDate());
 
-        TextView voteAverageTextView = (TextView) rootView.findViewById(R.id.vote_average_textView);
-        voteAverageTextView.setText(selectedMovie.getVoteAverage() + "/10");
+            TextView voteAverageTextView = (TextView) rootView.findViewById(R.id.vote_average_textView);
+            voteAverageTextView.setText(selectedMovie.getVoteAverage() + "/10");
 
-        String backdrop_path = buildBackdropPath();
-        Log.e(LOG_TAG, backdrop_path);
+            String backdrop_path = buildBackdropPath();
+            Log.e(LOG_TAG, backdrop_path);
+        }
 
         return rootView;
     }

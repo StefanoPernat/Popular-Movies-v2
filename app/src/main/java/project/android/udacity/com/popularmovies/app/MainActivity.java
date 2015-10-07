@@ -14,6 +14,8 @@ import android.view.Window;
 
 public class MainActivity extends AppCompatActivity {
 
+    boolean mTwoPane = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
