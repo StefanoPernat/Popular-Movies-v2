@@ -33,15 +33,18 @@ import project.android.udacity.com.popularmovies.app.task.FetchMovieTask;
  */
 public class MainActivityFragment extends Fragment {
 
+    public static final String MOVIE_BUNDLE_KEY = "detail.movie.fragment.bundle";
+
     private final String LOG_TAG = MainActivityFragment.class.getSimpleName();
     private final String STATE_PREFERRED_ORDER = "state.order";
     private final String STATE_MOVIES = "state.movies";
-    public static final String MOVIE_BUNDLE_KEY = "detail.movie.fragment.bundle";
+    private final String STATE_MOVIE = "state.selected.movie";
 
     private GridView mGridView;
     private TextView mMessageTextView;
     private ArrayList<Movie> mMovies = new ArrayList<>();
     private MovieAdapter mMovieAdapter;
+    private Movie mSelectedMovie = null;
 
 
     private String mSelectedOrder;
@@ -70,23 +73,22 @@ public class MainActivityFragment extends Fragment {
                     else if there's a fragment I will build the bundle to pass the selected movie to the fragment
                 */
 
-                Movie selected = mMovieAdapter.getItem(position);
-                if(getActivity().findViewById(R.id.fragment_detail) == null){
+               mSelectedMovie = mMovieAdapter.getItem(position);
+                if (getActivity().findViewById(R.id.fragment_detail) == null) {
                     Intent movieDetailIntent = new Intent(getActivity(), MovieDetailActivity.class);
-                    movieDetailIntent.putExtra(Intent.EXTRA_TEXT,selected);
+                    movieDetailIntent.putExtra(Intent.EXTRA_TEXT, mSelectedMovie);
                     startActivity(movieDetailIntent);
-                }
-                else {
+                } else {
                     Toast.makeText(getActivity(), "Hi Master Detail", Toast.LENGTH_LONG).show();
                     Bundle selectedMovieBundle = new Bundle();
-                    selectedMovieBundle.putParcelable(MOVIE_BUNDLE_KEY,selected);
+                    selectedMovieBundle.putParcelable(MOVIE_BUNDLE_KEY, mSelectedMovie);
 
                     // Replace the detail fragment
                     MovieDetailFragment movieDetailFragment = new MovieDetailFragment();
                     movieDetailFragment.setArguments(selectedMovieBundle);
 
                     getActivity().getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_detail,movieDetailFragment)
+                            .replace(R.id.fragment_detail, movieDetailFragment)
                             .commit();
                 }
 
@@ -102,6 +104,7 @@ public class MainActivityFragment extends Fragment {
         if(savedInstanceState != null) {
             mSelectedOrder = savedInstanceState.getString(STATE_PREFERRED_ORDER);
             mMovies = savedInstanceState.getParcelableArrayList(STATE_MOVIES);
+            mSelectedMovie = savedInstanceState.getParcelable(STATE_MOVIE);
             if (mMovies == null || mMovies.size() == 0){
                 mGridView.setVisibility(View.GONE);
                 mMessageTextView.setVisibility(View.VISIBLE);
@@ -119,6 +122,7 @@ public class MainActivityFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         outState.putString(STATE_PREFERRED_ORDER, mSelectedOrder);
         outState.putParcelableArrayList(STATE_MOVIES, mMovies);
+        outState.putParcelable(STATE_MOVIE,mSelectedMovie);
         super.onSaveInstanceState(outState);
     }
 
@@ -147,6 +151,20 @@ public class MainActivityFragment extends Fragment {
                         mGridView.setAdapter(mMovieAdapter);
                         mGridView.setVisibility(View.VISIBLE);
                         mMessageTextView.setVisibility(View.GONE);
+
+                        if(mSelectedMovie != null && getActivity().findViewById(R.id.fragment_detail) != null){
+
+                            Bundle selectedMovieBundle = new Bundle();
+                            selectedMovieBundle.putParcelable(MOVIE_BUNDLE_KEY,mSelectedMovie);
+
+                            // Replace the detail fragment
+                            MovieDetailFragment movieDetailFragment = new MovieDetailFragment();
+                            movieDetailFragment.setArguments(selectedMovieBundle);
+
+                            getActivity().getSupportFragmentManager().beginTransaction()
+                                    .replace(R.id.fragment_detail,movieDetailFragment)
+                                    .commit();
+                        }
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -154,6 +172,21 @@ public class MainActivityFragment extends Fragment {
                     e.printStackTrace();
                 }
 
+            }
+            else {
+                if(mSelectedMovie != null && getActivity().findViewById(R.id.fragment_detail) != null){
+
+                    Bundle selectedMovieBundle = new Bundle();
+                    selectedMovieBundle.putParcelable(MOVIE_BUNDLE_KEY,mSelectedMovie);
+
+                    // Replace the detail fragment
+                    MovieDetailFragment movieDetailFragment = new MovieDetailFragment();
+                    movieDetailFragment.setArguments(selectedMovieBundle);
+
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_detail,movieDetailFragment)
+                            .commit();
+                }
             }
 
             Log.e(LOG_TAG, "selectedOrder: "+mSelectedOrder);
