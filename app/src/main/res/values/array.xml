@@ -3,11 +3,13 @@
     <array name="pref_order_label">
         <item>Popularity</item>
         <item>Highest Rated</item>
+        <item>Favorites</item>
     </array>
 
     <array name="pref_order_values">
         <item>popularity.desc</item>
         <item>vote_average.desc</item>
+        <item>my_favorites</item>
         <!--<item>vote_count.desc</item>-->
     </array>
 </resources>
