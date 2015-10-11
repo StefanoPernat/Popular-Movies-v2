@@ -4,7 +4,8 @@ First Udacity's nanodegree project
 
 ##### Part I 
 
-I choose to implement the [MovieDB API Call](http://api.themoviedb.org/3/discover/movie?api_key=) as an IntentService (changed with AsyncTask as suggested by reviewer).  
+~~I choose to implement the [MovieDB API Call](http://api.themoviedb.org/3/discover/movie?api_key=) as an IntentService~~
+Change implementation from intent service to AsyncTask as suggested by reviewer
 
 ##### Implementation Steps
 
@@ -24,6 +25,9 @@ I choose to implement the [MovieDB API Call](http://api.themoviedb.org/3/discove
 
 
 #### PART II
+
+The main features to add for this second part, is to support tablet with custom layout, add favorite sort order, displaying in movie Detail
+users review and video trailers.
 
 1. Add support for Tablet (Build a Master - Detail Layout) **[COMPLETED]**
 2. Build a content provider with Schematics
