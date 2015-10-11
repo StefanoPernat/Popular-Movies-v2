@@ -10,7 +10,7 @@ import net.simonvt.schematic.annotation.Table;
 @Database(
         version = MovieDatabase.VERSION,
         packageName = "project.android.udacity.com.popularmovies.app.generated.data")
-public class MovieDatabase {
+public final class MovieDatabase {
     public static final int VERSION = 1;
 
     @Table(FavoriteMoviesColumns.class)
