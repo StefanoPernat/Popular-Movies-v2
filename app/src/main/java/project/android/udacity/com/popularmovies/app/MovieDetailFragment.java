@@ -1,20 +1,28 @@
 package project.android.udacity.com.popularmovies.app;
 
+import android.content.ContentProviderOperation;
 import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.RemoteException;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
+
+import project.android.udacity.com.popularmovies.app.data.FavoriteMoviesColumns;
+import project.android.udacity.com.popularmovies.app.data.MovieProvider;
 import project.android.udacity.com.popularmovies.app.model.Movie;
 
 /**
@@ -75,6 +83,15 @@ public class MovieDetailFragment extends Fragment {
             TextView voteAverageTextView = (TextView) rootView.findViewById(R.id.vote_average_textView);
             voteAverageTextView.setText(selectedMovie.getVoteAverage() + "/10");
 
+            /*Button button = (Button) rootView.findViewById(R.id.button_content);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(getActivity(),"Content Provider test",Toast.LENGTH_SHORT).show();
+                    saveAsFavorite(selectedMovie);
+                }
+            });*/
+
             String backdrop_path = buildBackdropPath();
             Log.e(LOG_TAG, backdrop_path);
         }
@@ -113,5 +130,30 @@ public class MovieDetailFragment extends Fragment {
         }
 
         return null;
+    }
+
+    private void saveAsFavorite(Movie movie){
+        ArrayList<ContentProviderOperation> batchOperation = new ArrayList<>();
+
+        ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(MovieProvider.Favorites.CONTENT_URI);
+        builder.withValue(FavoriteMoviesColumns._ID,movie.getId());
+        builder.withValue(FavoriteMoviesColumns.BACKDROP, movie.getBackDrop());
+        builder.withValue(FavoriteMoviesColumns.LANGUAGE,movie.getLanguage());
+        builder.withValue(FavoriteMoviesColumns.PLOT,movie.getPlot());
+        builder.withValue(FavoriteMoviesColumns.POPULARITY,movie.getPopularity());
+        builder.withValue(FavoriteMoviesColumns.POSTER,movie.getPoster());
+        builder.withValue(FavoriteMoviesColumns.RELEASE_DATE,movie.getReleaseDate());
+        builder.withValue(FavoriteMoviesColumns.TITLE,movie.getTitle());
+        builder.withValue(FavoriteMoviesColumns.VOTE_AVERAGE,movie.getVoteAverage());
+
+        batchOperation.add(builder.build());
+
+        try
+        {
+            getActivity().getContentResolver().applyBatch(MovieProvider.AUTHORITY,batchOperation);
+        }
+        catch (RemoteException | OperationApplicationException e) {
+            e.printStackTrace();
+        }
     }
 }
