@@ -4,6 +4,7 @@ import android.content.ContentProviderOperation;
 import android.content.Intent;
 import android.content.OperationApplicationException;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
 import android.support.v4.app.Fragment;
@@ -17,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.pavlospt.CircleView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -59,18 +61,42 @@ public class MovieDetailFragment extends Fragment {
 
         if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             Picasso.with(getActivity()).load(buildBackdropPathForLandscape()).into(backdropImageView);
-            backdropImageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        }
-
-        /*
-            Picasso.with(getActivity()).load(buildBackdropPath()).into(backdropImageView);
             backdropImageView.setScaleType(ImageView.ScaleType.FIT_XY);
         }
-        else {
-            Picasso.with(getActivity()).load(buildPosterPath()).into(backdropImageView);
-        }*/
 
         if(selectedMovie != null) {
+
+            final ImageView imageview_favs = (ImageView) rootView.findViewById(R.id.imageview_favorite);
+            if(checkIfFavorite(selectedMovie.getId())){
+                imageview_favs.setImageResource(R.drawable.fav_yes);
+            }
+            else {
+                imageview_favs.setImageResource(R.drawable.no_fav);
+            }
+
+            imageview_favs.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(!checkIfFavorite(selectedMovie.getId())){
+                        saveAsFavorite(selectedMovie);
+                        imageview_favs.setImageResource(R.drawable.fav_yes);
+                    }
+                    else {
+                        int deleted  = deleteFromFavorite(selectedMovie.getId());
+                        if(deleted > 0){
+                            imageview_favs.setImageResource(R.drawable.no_fav);
+                        }
+                        else {
+                            imageview_favs.setImageResource(R.drawable.fav_yes);
+                        }
+                    }
+                }
+            });
+
+
+            Log.e(LOG_TAG,""+checkIfFavorite(selectedMovie.getId()));
+
+
             TextView titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
             titleTextView.setText(selectedMovie.getTitle());
 
@@ -80,17 +106,11 @@ public class MovieDetailFragment extends Fragment {
             TextView releaseDateTextView = (TextView) rootView.findViewById(R.id.release_date_textview);
             releaseDateTextView.setText(selectedMovie.getReleaseDate());
 
-            TextView voteAverageTextView = (TextView) rootView.findViewById(R.id.vote_average_textView);
-            voteAverageTextView.setText(selectedMovie.getVoteAverage() + "/10");
+            CircleView circleViewVoteAverage = (CircleView) rootView.findViewById(R.id.vote_average_view);
+            circleViewVoteAverage.setTitleText(String.valueOf(selectedMovie.getVoteAverage()));
 
-            /*Button button = (Button) rootView.findViewById(R.id.button_content);
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(getActivity(),"Content Provider test",Toast.LENGTH_SHORT).show();
-                    saveAsFavorite(selectedMovie);
-                }
-            });*/
+            /*TextView voteAverageTextView = (TextView) rootView.findViewById(R.id.vote_average_textView);
+            voteAverageTextView.setText(selectedMovie.getVoteAverage() + "/10");*/
 
             String backdrop_path = buildBackdropPath();
             Log.e(LOG_TAG, backdrop_path);
@@ -155,5 +175,36 @@ public class MovieDetailFragment extends Fragment {
         catch (RemoteException | OperationApplicationException e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean checkIfFavorite(long id){
+        Cursor cursor = getActivity().getContentResolver().query(
+                            MovieProvider.Favorites.CONTENT_URI,
+                            null,
+                            FavoriteMoviesColumns._ID + " = "+id,
+                            null,
+                            null);
+        try {
+            if(cursor.getCount() > 0){
+                cursor.close();
+                return true;
+            }
+            else {
+                cursor.close();
+                return false;
+            }
+        }
+        catch (Exception e){
+            cursor.close();
+            return false;
+        }
+    }
+
+    private int deleteFromFavorite(long id){
+        return getActivity().getContentResolver().delete(
+                MovieProvider.Favorites.CONTENT_URI,
+                FavoriteMoviesColumns._ID +" = "+id,
+                null
+        );
     }
 }

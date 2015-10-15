@@ -4,4 +4,5 @@
  <color name="popular_movies_dark_orange_bar">#D84315</color>
  <color name="movies_text_white">#FFFFFF</color>
  <color name="primary_material_dark">#2196f3</color>
+ <color name="movies_dark_gray">#696969</color>
 </resources>

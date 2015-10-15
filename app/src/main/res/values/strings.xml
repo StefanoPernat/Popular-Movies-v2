@@ -18,6 +18,7 @@
     <string name="pref_order_label">Order By</string>
     <string name="pref_order_key">selected_order</string>
     <string name="pref_order_default">popularity.desc</string>
+    <string name="order_fav">my_favorites</string>
 
     <!-- movie item strings -->
     <string name="item_default_content_desc">Movie</string>

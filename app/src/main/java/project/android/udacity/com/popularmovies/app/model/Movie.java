@@ -9,7 +9,7 @@ import android.os.Parcelable;
  * The movie class
  */
 public class Movie implements Parcelable{
-    private int mId;
+    private long mId;
     private String mLanguage;
     private String mPlot;
     private String mReleaseDate;
@@ -23,7 +23,7 @@ public class Movie implements Parcelable{
 
     }
 
-    public Movie(int id, String language, String plot, String releaseDate, double popularity, double voteAverage, String backdrop, String poster, String title){
+    public Movie(long id, String language, String plot, String releaseDate, double popularity, double voteAverage, String backdrop, String poster, String title){
         this.mId = id;
         this.mLanguage = language;
         this.mPlot = plot;
@@ -36,7 +36,7 @@ public class Movie implements Parcelable{
     }
 
     private Movie(Parcel parcel){
-        this.mId = parcel.readInt();
+        this.mId = parcel.readLong();
         this.mLanguage = parcel.readString();
         this.mPlot = parcel.readString();
         this.mReleaseDate = parcel.readString();
@@ -48,11 +48,11 @@ public class Movie implements Parcelable{
 
     }
 
-    public int getId() {
+    public long getId() {
         return mId;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         mId = id;
     }
 
@@ -141,7 +141,7 @@ public class Movie implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(mId);
+        dest.writeLong(mId);
         dest.writeString(mLanguage);
         dest.writeString(mPlot);
         dest.writeString(mReleaseDate);
