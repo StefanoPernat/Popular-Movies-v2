@@ -50,7 +50,7 @@ public class MainActivityFragment extends Fragment {
     private Movie mSelectedMovie;
 
 
-    private String mSelectedOrder;
+    private String mSelectedOrder = "";
 
     public MainActivityFragment() {
     }
@@ -134,21 +134,26 @@ public class MainActivityFragment extends Fragment {
 
     @Override
     public void onResume() {
+        Log.e(LOG_TAG, "Resume...");
         super.onResume();
 
-        if(mSelectedOrder == null || mSelectedOrder.compareTo("") == 0){
+        if(getPreferredOrder().equals(getString(R.string.order_fav))){
             mSelectedOrder = getPreferredOrder();
-
         }
 
-        /*Log.e(LOG_TAG, "selectedOrder: " + mSelectedOrder);
-        Log.e(LOG_TAG, "preferredOrder: " + getPreferredOrder());
-        Log.e(LOG_TAG, "current order = preferred order ==> " + (mSelectedOrder.equals(getPreferredOrder())));*/
+        /*if(mSelectedOrder == null || mSelectedOrder.compareTo("") == 0){
+            mSelectedOrder = getPreferredOrder();
+
+        }*/
+
+        Log.e(LOG_TAG, "[START] selectedOrder: " + mSelectedOrder);
+        Log.e(LOG_TAG, "[START] preferredOrder: " + getPreferredOrder());
+        Log.e(LOG_TAG, "[START] current order = preferred order ==> " + (mSelectedOrder.equals(getPreferredOrder())));
 
         ArrayList<Movie> movies = new ArrayList<>();
         if(getActivity() != null){
 //            Log.e(LOG_TAG, "Ho selezionato preferiti = "+(mSelectedOrder.equals(getString(R.string.order_fav))));
-            if(mSelectedOrder.compareTo(getString(R.string.order_fav)) == 0){
+            if(mSelectedOrder.equals(getString(R.string.order_fav)) && mSelectedOrder.equals(getPreferredOrder())){
                 movies.clear();
                 movies.addAll(getFavoritesArray());
                 mMovies.clear();
@@ -156,7 +161,7 @@ public class MainActivityFragment extends Fragment {
                 //mSelectedOrder = getPreferredOrder();
             }
             else {
-                if(mSelectedOrder.compareTo(getPreferredOrder()) == 0  || mMovies.size() == 0){
+                if(!mSelectedOrder.equals(getPreferredOrder())  || mMovies.size() == 0){
                     mSelectedOrder = getPreferredOrder();
                     FetchMovieTask movieTask = new FetchMovieTask();
                     movies.clear();
@@ -197,9 +202,9 @@ public class MainActivityFragment extends Fragment {
                         .commit();
             }
 
-            Log.e(LOG_TAG, "selectedOrder: "+mSelectedOrder);
-            Log.e(LOG_TAG, "preferredOrder: "+getPreferredOrder());
-            Log.e(LOG_TAG, "current order = preferred order ==> "+(mSelectedOrder.equals(getPreferredOrder())));
+            Log.e(LOG_TAG, "[STOP] selectedOrder: "+mSelectedOrder);
+            Log.e(LOG_TAG, "[STOP] preferredOrder: "+getPreferredOrder());
+            Log.e(LOG_TAG, "[STOP] current order = preferred order ==> "+(mSelectedOrder.equals(getPreferredOrder())));
 
         }
     }
