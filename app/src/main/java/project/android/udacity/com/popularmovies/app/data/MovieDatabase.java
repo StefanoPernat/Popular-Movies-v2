@@ -15,4 +15,10 @@ public final class MovieDatabase {
 
     @Table(FavoriteMoviesColumns.class)
     public static final String FAVORITES = "favorites";
+
+    @Table(FavoriteMoviesReviewsColumns.class)
+    public static final String REVIEWS = "reviews";
+
+    @Table(FavoriteMoviesTrailersColumns.class)
+    public static final String TRAILERS = "trailers";
 }
