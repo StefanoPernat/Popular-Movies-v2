@@ -7,14 +7,14 @@ import android.os.Parcelable;
  * Created by stefanopernat on 17/10/15.
  */
 public class Review implements Parcelable{
-    private long mId;
+    private String mId;
     private long mMovieId;
     private String mAuthor;
     private String mContent;
 
     public Review(){}
 
-    public Review(long id, long movieId, String author, String content){
+    public Review(String id, long movieId, String author, String content){
         this.mId = id;
         this.mMovieId = movieId;
         this.mAuthor = author;
@@ -22,17 +22,17 @@ public class Review implements Parcelable{
     }
 
     public Review(Parcel parcel){
-        this.mId = parcel.readLong();
+        this.mId = parcel.readString();
         this.mMovieId = parcel.readLong();
         this.mAuthor = parcel.readString();
         this.mContent = parcel.readString();
     }
 
-    public long getId() {
+    public String getId() {
         return mId;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         mId = id;
     }
 
@@ -71,7 +71,7 @@ public class Review implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(this.mId);
+        dest.writeString(this.mId);
         dest.writeLong(this.mMovieId);
         dest.writeString(this.mAuthor);
         dest.writeString(this.mContent);
