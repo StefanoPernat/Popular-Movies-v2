@@ -1,9 +1,12 @@
 package project.android.udacity.com.popularmovies.app;
 
 import android.app.ProgressDialog;
+import android.content.ContentProviderOperation;
 import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.os.Handler;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -27,9 +30,15 @@ import java.util.concurrent.ExecutionException;
 
 import project.android.udacity.com.popularmovies.app.adapter.MovieAdapter;
 import project.android.udacity.com.popularmovies.app.data.FavoriteMoviesColumns;
+import project.android.udacity.com.popularmovies.app.data.FavoriteMoviesReviewsColumns;
+import project.android.udacity.com.popularmovies.app.data.FavoriteMoviesTrailersColumns;
 import project.android.udacity.com.popularmovies.app.data.MovieProvider;
 import project.android.udacity.com.popularmovies.app.model.Movie;
+import project.android.udacity.com.popularmovies.app.model.Review;
+import project.android.udacity.com.popularmovies.app.model.Trailer;
+import project.android.udacity.com.popularmovies.app.task.FetchMovieReviewsTask;
 import project.android.udacity.com.popularmovies.app.task.FetchMovieTask;
+import project.android.udacity.com.popularmovies.app.task.FetchMovieTrailersTask;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -79,6 +88,29 @@ public class MainActivityFragment extends Fragment {
                 */
 
                 mSelectedMovie = mMovieAdapter.getItem(position);
+                new FetchMovieReviewsTask().execute(getString(R.string.api_key), String.valueOf(mSelectedMovie.getId()));
+
+                /*try{
+                    ArrayList<Review> test = new FetchMovieReviewsTask().execute(getString(R.string.api_key), String.valueOf(mSelectedMovie.getId())).get();
+                    saveReviews(test);
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                }*/
+
+                reviewsForMovies(mSelectedMovie.getId());
+
+                /*try {
+                    ArrayList<Trailer> test = new FetchMovieTrailersTask().execute(getString(R.string.api_key), String.valueOf(mSelectedMovie.getId())).get();
+                    saveTrailers(test);
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                }
+
+
+                trailersForMovie(mSelectedMovie.getId());*/
+
                 if (getActivity().findViewById(R.id.fragment_detail) == null) {
                     Intent movieDetailIntent = new Intent(getActivity(), MovieDetailActivity.class);
                     movieDetailIntent.putExtra(Intent.EXTRA_TEXT, mSelectedMovie);
@@ -254,5 +286,122 @@ public class MainActivityFragment extends Fragment {
         }
     }
 
+    private boolean checkIfFavorite(long id){
+        Cursor cursor = getActivity().getContentResolver().query(
+                MovieProvider.Favorites.CONTENT_URI,
+                null,
+                FavoriteMoviesColumns._ID + " = "+id,
+                null,
+                null);
+        try {
+            if(cursor.getCount() > 0){
+                cursor.close();
+                return true;
+            }
+            else {
+                cursor.close();
+                return false;
+            }
+        }
+        catch (Exception e){
+            cursor.close();
+            return false;
+        }
+    }
 
+    private void saveTrailers(ArrayList<Trailer> trailers){
+        ArrayList<ContentProviderOperation> batchOperation = new ArrayList<>();
+
+        for (Trailer trailer: trailers){
+            ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(MovieProvider.Trailers.CONTENT_URI);
+            builder.withValue(FavoriteMoviesTrailersColumns.MOVIE_ID, trailer.getMovieId());
+            builder.withValue(FavoriteMoviesTrailersColumns.KEY, trailer.getKey());
+            builder.withValue(FavoriteMoviesTrailersColumns.NAME, trailer.getName());
+
+            batchOperation.add(builder.build());
+        }
+
+        try{
+            getActivity().getContentResolver().applyBatch(MovieProvider.AUTHORITY,batchOperation);
+        }
+        catch (RemoteException | OperationApplicationException e){
+            e.printStackTrace();
+        }
+
+    }
+
+    private ArrayList<Trailer> trailersForMovie(long movieId){
+        ArrayList<Trailer> result = new ArrayList<>();
+
+        Cursor cursor = getActivity().getContentResolver().query(
+                MovieProvider.Trailers.withId(movieId),
+                null,
+                FavoriteMoviesTrailersColumns.MOVIE_ID +" = "+movieId,
+                null,
+                null
+        );
+
+        while (cursor.moveToNext()){
+            Trailer t = new Trailer();
+            t.setKey(cursor.getString(cursor.getColumnIndex(FavoriteMoviesTrailersColumns.KEY)));
+            t.setName(cursor.getString(cursor.getColumnIndex(FavoriteMoviesTrailersColumns.NAME)));
+            t.setMovieId(cursor.getLong(cursor.getColumnIndex(FavoriteMoviesTrailersColumns.MOVIE_ID)));
+
+            Log.e(LOG_TAG, "[TRAILER] "+t.toString());
+            result.add(t);
+        }
+
+        cursor.close();
+        return result;
+    }
+
+    private void saveReviews(ArrayList<Review> reviews){
+        ArrayList<ContentProviderOperation> batchOperation = new ArrayList<>();
+
+        for (Review review: reviews){
+            ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(MovieProvider.Reviews.CONTENT_URI);
+            builder.withValue(FavoriteMoviesReviewsColumns._ID, review.getId());
+            builder.withValue(FavoriteMoviesReviewsColumns.MOVIE_ID, review.getMovieId());
+            builder.withValue(FavoriteMoviesReviewsColumns.AUTHOR, review.getAuthor());
+            builder.withValue(FavoriteMoviesReviewsColumns.CONTENT, review.getContent());
+
+            batchOperation.add(builder.build());
+        }
+
+        try{
+            getActivity().getContentResolver().applyBatch(MovieProvider.AUTHORITY,batchOperation);
+        }
+        catch (RemoteException | OperationApplicationException e){
+            Log.e(LOG_TAG, "exception");
+            e.printStackTrace();
+        }
+
+        Log.e(LOG_TAG, "fine");
+    }
+
+    private ArrayList<Review> reviewsForMovies(long movieId){
+        ArrayList<Review> result = new ArrayList<>();
+
+        Cursor cursor = getActivity().getContentResolver().query(
+                MovieProvider.Reviews.withId(movieId),
+                null,
+                FavoriteMoviesTrailersColumns.MOVIE_ID +" = "+movieId,
+                null,
+                null
+        );
+
+        while (cursor.moveToNext()){
+            Review review = new Review();
+            review.setId(cursor.getString(cursor.getColumnIndex(FavoriteMoviesReviewsColumns._ID)));
+            review.setAuthor(cursor.getString(cursor.getColumnIndex(FavoriteMoviesReviewsColumns.AUTHOR)));
+            review.setContent(cursor.getString(cursor.getColumnIndex(FavoriteMoviesReviewsColumns.CONTENT)));
+            review.setMovieId(cursor.getLong(cursor.getColumnIndex(FavoriteMoviesReviewsColumns.MOVIE_ID)));
+
+            Log.e(LOG_TAG, "[REVIEWS] "+review.toString());
+            result.add(review);
+        }
+
+        cursor.close();
+        return result;
+    }
 }

@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -15,24 +16,24 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
-import project.android.udacity.com.popularmovies.app.model.Trailer;
+import project.android.udacity.com.popularmovies.app.model.Review;
 
 /**
- * Created by stefanopernat on 17/10/15.
+ * Created by stefanopernat on 18/10/15.
  */
-public class FetchMovieTrailersTask extends AsyncTask<String, Void, ArrayList<Trailer>> {
-    private final static String LOG_TAG = FetchMovieTrailersTask.class.getSimpleName();
+public class FetchMovieReviewsTask extends AsyncTask<String,Void,ArrayList<Review>> {
+    private static final String LOG_TAG = FetchMovieReviewsTask.class.getSimpleName();
 
-    private static final String MOVIE_TRAILER_BASE_URL =
+    private static final String MOVIE_REVIEWS_BASE_URL =
             "http://api.themoviedb.org/3/movie/";
 
-    private static final String JSON_YOUTUBE_ARRAY = "youtube";
-    private static final String JSON_TRAILER_KEY = "source";
-    private static final String JSON_TRAILER_NAME = "name";
-
+    private static final String JSON_RESULT_ARRAY = "result";
+    private static final String JSON_REVIEW_ID = "id";
+    private static final String JSON_REVIEW_AUTHOR = "author";
+    private static final String JSON_REVIEW_CONTENT = "content";
 
     @Override
-    protected ArrayList<Trailer> doInBackground(String... params) {
+    protected ArrayList<Review> doInBackground(String... params) {
         if(params.length != 2){
             return new ArrayList<>();
         }
@@ -40,10 +41,10 @@ public class FetchMovieTrailersTask extends AsyncTask<String, Void, ArrayList<Tr
         String apiKey = params[0];
         String movieId = params[1];
 
-        String jsonResult = getJsonResult(apiKey,movieId);
-        ArrayList<Trailer> result = parseJsonResult(Long.parseLong(movieId), jsonResult);
+        String json = getJsonResult(apiKey, movieId);
+        ArrayList<Review> reviews = parseJsonResult(Long.parseLong(movieId),json);
 
-        return result;
+        return reviews;
     }
 
     private String getJsonResult(String apiKey, String movieId){
@@ -51,10 +52,10 @@ public class FetchMovieTrailersTask extends AsyncTask<String, Void, ArrayList<Tr
         BufferedReader reader = null;
         StringBuffer buffer = new StringBuffer();
 
-        Uri builtUri = Uri.parse(MOVIE_TRAILER_BASE_URL).buildUpon()
-                        .appendPath(movieId)
-                        .appendPath("trailers")
-                        .appendQueryParameter("api_key", apiKey).build();
+        Uri builtUri = Uri.parse(MOVIE_REVIEWS_BASE_URL).buildUpon()
+                .appendPath(movieId)
+                .appendPath("reviews")
+                .appendQueryParameter("api_key", apiKey).build();
         Log.e(LOG_TAG, builtUri.toString());
 
         try {
@@ -101,27 +102,29 @@ public class FetchMovieTrailersTask extends AsyncTask<String, Void, ArrayList<Tr
         return buffer.toString();
     }
 
-    private ArrayList<Trailer> parseJsonResult(long movieId, String jsonString){
-        ArrayList<Trailer> result = new ArrayList<>();
+    private ArrayList<Review> parseJsonResult (long movieId, String jsonString){
+        ArrayList<Review> result = new ArrayList<>();
         JSONObject jsonRoot = null;
 
         try {
-            jsonRoot = new JSONObject(jsonString);
-            JSONArray jsonTrailersArray = jsonRoot.getJSONArray(JSON_YOUTUBE_ARRAY);
-            for (int k=0; k<jsonTrailersArray.length(); k++){
-                String key, title;
+                jsonRoot = new JSONObject(jsonString);
+                JSONArray jsonReviewsArray = jsonRoot.getJSONArray("results");
+                for (int k=0; k < jsonReviewsArray.length(); k++){
+                    JSONObject jsonReview = jsonReviewsArray.getJSONObject(k);
+                    String id, author, content;
 
-                JSONObject jsonTrailer = jsonTrailersArray.getJSONObject(k);
-                key = jsonTrailer.getString(JSON_TRAILER_KEY);
-                title = jsonTrailer.getString(JSON_TRAILER_NAME);
+                    id = jsonReview.getString(JSON_REVIEW_ID);
+                    author = jsonReview.getString(JSON_REVIEW_AUTHOR);
+                    content = jsonReview.getString(JSON_REVIEW_CONTENT);
 
-                Trailer t = new Trailer(movieId,key,title);
-                result.add(t);
-                Log.e(LOG_TAG, t.toString());
+                    Review review = new Review(id,movieId,author,content);
+                    Log.e(LOG_TAG, review.toString());
+                    result.add(review);
             }
-        } catch (Exception e){
+
+        } catch (JSONException e){
+            Log.e(LOG_TAG, e.getMessage());
             result = new ArrayList<>();
-            e.printStackTrace();
         }
 
         return result;

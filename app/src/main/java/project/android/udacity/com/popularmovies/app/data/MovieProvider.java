@@ -23,6 +23,10 @@ public final class MovieProvider {
 
     interface Paths {
         String FAVORITES = "favorites";
+        String REVIEWS = "reviews";
+        String TRAILERS = "trailers";
+        String MOVIE_REVIEWS = "movie_reviews";
+        String MOVIE_TRAILERS = "movie_trailers";
     }
 
     private static Uri buildUri (String ... paths){
@@ -52,5 +56,57 @@ public final class MovieProvider {
         public static Uri withId (long id){
             return buildUri(Paths.FAVORITES, String.valueOf(id));
         }
+    }
+
+    @TableEndpoint(table = MovieDatabase.REVIEWS)
+    public static class Reviews {
+        @ContentUri(
+                path = Paths.REVIEWS,
+                type = "vnd.android.cursor.dir/review",
+                defaultSort = FavoriteMoviesReviewsColumns.MOVIE_ID + " DESC")
+        public static final  Uri CONTENT_URI = buildUri(Paths.REVIEWS);
+
+        @InexactContentUri(
+                name = "REVIEW_ID",
+                path = Paths.REVIEWS + "/#",
+                type = "vnd.android.cursor.item/review",
+                whereColumn = FavoriteMoviesReviewsColumns._ID,
+                pathSegment = 1)
+        public static  Uri withId(String id){ return buildUri(Paths.REVIEWS, id); }
+
+        @InexactContentUri(
+                name = "REVIEWS_PER_MOVIE",
+                path = Paths.REVIEWS + "/" + Paths.MOVIE_REVIEWS + "/#",
+                type = "vnd.android.cursor.dir/favorite",
+                whereColumn = FavoriteMoviesReviewsColumns.MOVIE_ID,
+                pathSegment = 2)
+        public static Uri withId(long movieId){ return buildUri(Paths.REVIEWS, Paths.MOVIE_REVIEWS, String.valueOf(movieId));}
+    }
+
+    @TableEndpoint(table = MovieDatabase.TRAILERS)
+    public static class Trailers {
+        @ContentUri(
+                path = Paths.TRAILERS,
+                type = "vnd.android.cursor.dir/trailer",
+                defaultSort = FavoriteMoviesTrailersColumns.MOVIE_ID + " DESC")
+        public static final  Uri CONTENT_URI = buildUri(Paths.TRAILERS);
+
+        @InexactContentUri(
+                name = "TRAILER_ID",
+                path = Paths.TRAILERS + "/#",
+                type = "vnd.android.cursor.item/trailer",
+                whereColumn = FavoriteMoviesTrailersColumns._ID,
+                pathSegment = 1)
+        public static  Uri withTrailerId(long id){ return buildUri(Paths.TRAILERS, String.valueOf(id)); }
+
+        @InexactContentUri(
+                name = "TRAILER_PER_MOVIE",
+                path = Paths.TRAILERS + "/" + Paths.MOVIE_TRAILERS + "/#",
+                type = "vnd.android.cursor.dir/favorite",
+                whereColumn = FavoriteMoviesTrailersColumns.MOVIE_ID,
+                pathSegment = 2)
+        public static Uri withId(long movieId){ return buildUri(Paths.TRAILERS, Paths.MOVIE_TRAILERS, String.valueOf(movieId));}
+
+
     }
 }

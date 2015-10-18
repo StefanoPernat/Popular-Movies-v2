@@ -12,7 +12,7 @@ import net.simonvt.schematic.annotation.References;
  */
 public interface FavoriteMoviesReviewsColumns {
 
-    @DataType(DataType.Type.INTEGER) @PrimaryKey
+    @DataType(DataType.Type.TEXT) @PrimaryKey
     public static final String _ID ="_id";
 
     @DataType(DataType.Type.INTEGER) @References(table = MovieDatabase.FAVORITES, column = FavoriteMoviesColumns._ID) @NotNull
