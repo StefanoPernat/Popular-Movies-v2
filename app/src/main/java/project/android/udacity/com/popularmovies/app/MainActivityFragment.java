@@ -88,28 +88,31 @@ public class MainActivityFragment extends Fragment {
                 */
 
                 mSelectedMovie = mMovieAdapter.getItem(position);
-                new FetchMovieReviewsTask().execute(getString(R.string.api_key), String.valueOf(mSelectedMovie.getId()));
 
-                /*try{
-                    ArrayList<Review> test = new FetchMovieReviewsTask().execute(getString(R.string.api_key), String.valueOf(mSelectedMovie.getId())).get();
-                    saveReviews(test);
-                }
-                catch (Exception e){
-                    e.printStackTrace();
-                }*/
+                ArrayList<Trailer> trailersForSelectedMovie = trailersForMovie(mSelectedMovie.getId());
+                if(trailersForSelectedMovie.size() == 0){
+                    try{
+                        trailersForSelectedMovie.addAll(new FetchMovieTrailersTask().execute(getString(R.string.api_key), String.valueOf(mSelectedMovie.getId())).get());
+                    }
+                    catch (InterruptedException | ExecutionException e){
+                        Log.e(LOG_TAG, e.getMessage(), e);
+                    }
 
-                reviewsForMovies(mSelectedMovie.getId());
-
-                /*try {
-                    ArrayList<Trailer> test = new FetchMovieTrailersTask().execute(getString(R.string.api_key), String.valueOf(mSelectedMovie.getId())).get();
-                    saveTrailers(test);
-                }
-                catch (Exception e){
-                    e.printStackTrace();
                 }
 
+                ArrayList<Review> reviewsForSelectedMovie = reviewsForMovies(mSelectedMovie.getId());
+                if(reviewsForSelectedMovie.size() == 0){
+                    try{
+                        reviewsForSelectedMovie.addAll(new FetchMovieReviewsTask().execute(getString(R.string.api_key), String.valueOf(mSelectedMovie.getId())).get());
+                    }
+                    catch (InterruptedException | ExecutionException e){
+                        Log.e(LOG_TAG, e.getMessage(), e);
+                    }
 
-                trailersForMovie(mSelectedMovie.getId());*/
+                }
+
+                mSelectedMovie.setTrailers(trailersForSelectedMovie);
+                mSelectedMovie.setReviews(reviewsForSelectedMovie);
 
                 if (getActivity().findViewById(R.id.fragment_detail) == null) {
                     Intent movieDetailIntent = new Intent(getActivity(), MovieDetailActivity.class);
@@ -134,6 +137,14 @@ public class MainActivityFragment extends Fragment {
 
         return viewRoot;
     }
+
+    /*
+        Restore the saved instance
+
+        - restore select order
+        - restore movies arraylist
+        - restore the selected movie
+    */
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {

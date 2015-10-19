@@ -53,6 +53,8 @@ public class MovieDetailFragment extends Fragment {
             selectedMovie = arguments.getParcelable(MainActivityFragment.MOVIE_BUNDLE_KEY);
         }
 
+        Log.e(LOG_TAG, selectedMovie.toString());
+
         //Toast.makeText(getActivity(), selectedMovie.toString(), Toast.LENGTH_LONG).show();
 
         ImageView backdropImageView = (ImageView) rootView.findViewById(R.id.backdrop_imageview);

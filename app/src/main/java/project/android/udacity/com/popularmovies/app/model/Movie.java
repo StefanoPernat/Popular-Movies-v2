@@ -3,10 +3,13 @@ package project.android.udacity.com.popularmovies.app.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
+
 /**
  * Created by stefanopernat on 15/09/15.
  *
  * The movie class
+ * [Edit] add field for Trailers and Reviews
  */
 public class Movie implements Parcelable{
     private long mId;
@@ -18,6 +21,10 @@ public class Movie implements Parcelable{
     private String mPoster;
     private String mBackDrop;
     private String mTitle;
+
+    private ArrayList<Trailer> mTrailers;
+    private ArrayList<Review> mReviews;
+
 
     public Movie(){
 
@@ -45,6 +52,9 @@ public class Movie implements Parcelable{
         this.mPoster = parcel.readString();
         this.mBackDrop = parcel.readString();
         this.mTitle = parcel.readString();
+
+        this.mTrailers = parcel.createTypedArrayList(Trailer.CREATOR);
+        this.mReviews = parcel.createTypedArrayList(Review.CREATOR);
 
     }
 
@@ -120,6 +130,48 @@ public class Movie implements Parcelable{
         mBackDrop = backDrop;
     }
 
+    public ArrayList<Trailer> getTrailers() {
+        if(mTrailers == null){
+            return new ArrayList<>();
+        }
+        else{
+            return new ArrayList<>(mTrailers);
+        }
+
+    }
+
+    public void setTrailers(ArrayList<Trailer> trailers) {
+        if(mTrailers == null){
+            mTrailers = new ArrayList<>();
+        }
+        else {
+            mTrailers.clear();
+        }
+
+        mTrailers.addAll(trailers);
+    }
+
+    public ArrayList<Review> getReviews() {
+        if(mReviews == null){
+            return new ArrayList<>();
+        }
+        else {
+            return new ArrayList<>(mReviews);
+        }
+
+    }
+
+    public void setReviews(ArrayList<Review> reviews) {
+        if(mReviews == null){
+            mReviews = new ArrayList<>();
+        }
+        else {
+            mReviews.clear();
+        }
+
+        mReviews.addAll(reviews);
+    }
+
     @Override
     public String toString() {
         return
@@ -131,7 +183,9 @@ public class Movie implements Parcelable{
                 "popularity: " + mPopularity + "\n" +
                 "vote average: " + mVoteAverage + "\n" +
                 "poster: " + mPoster + "\n" +
-                "back_drop: " + mBackDrop + "\n";
+                "back_drop: " + mBackDrop + "\n" +
+                "trailers size: " + mTrailers.size() + "\n" +
+                "reviews size: " + mReviews.size() + "\n";
     }
 
     @Override
@@ -150,6 +204,8 @@ public class Movie implements Parcelable{
         dest.writeString(mPoster);
         dest.writeString(mBackDrop);
         dest.writeString(mTitle);
+        dest.writeTypedList(mTrailers);
+        dest.writeTypedList(mReviews);
     }
 
     public final static Parcelable.Creator<Movie> CREATOR = new Parcelable.Creator<Movie>(){
