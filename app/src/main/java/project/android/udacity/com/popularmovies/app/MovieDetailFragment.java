@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,6 +27,8 @@ import java.util.ArrayList;
 import project.android.udacity.com.popularmovies.app.data.FavoriteMoviesColumns;
 import project.android.udacity.com.popularmovies.app.data.MovieProvider;
 import project.android.udacity.com.popularmovies.app.model.Movie;
+import project.android.udacity.com.popularmovies.app.model.Review;
+import project.android.udacity.com.popularmovies.app.model.Trailer;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -116,6 +119,9 @@ public class MovieDetailFragment extends Fragment {
 
             String backdrop_path = buildBackdropPath();
             Log.e(LOG_TAG, backdrop_path);
+
+            displayTrailer(selectedMovie.getTrailers(),rootView);
+            displayReviews(selectedMovie.getReviews(),rootView);
         }
 
         return rootView;
@@ -208,5 +214,52 @@ public class MovieDetailFragment extends Fragment {
                 FavoriteMoviesColumns._ID +" = "+id,
                 null
         );
+    }
+
+    private void displayTrailer(ArrayList<Trailer> trailers, View rootView){
+        LinearLayout trailerContainer = (LinearLayout) rootView.findViewById(R.id.trailer_container);
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        for (final Trailer trailer : trailers){
+            View trailerView = inflater.inflate(R.layout.trailer_item, null);
+            TextView trailerName = (TextView) trailerView.findViewById(R.id.trailer_name);
+            trailerName.setText(trailer.getName());
+            //trailerView.setPadding(0,0,0,2);
+            trailerView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    watchYoutubeVideo(trailer.getKey());
+                }
+            });
+            trailerContainer.addView(trailerView);
+        }
+    }
+
+    private void displayReviews(ArrayList<Review> reviews, View rootView){
+        LinearLayout reviewsContainer = (LinearLayout) rootView.findViewById(R.id.reviews_container);
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        for (Review review : reviews){
+            View reviewView = inflater.inflate(R.layout.review_item, null);
+
+            TextView reviewAuthor = (TextView) reviewView.findViewById(R.id.review_author);
+            reviewAuthor.setText(review.getAuthor().toUpperCase());
+
+            TextView reviewContent = (TextView) reviewView.findViewById(R.id.review_content);
+            reviewContent.setText(review.getContent());
+            //trailerView.setPadding(0,0,0,2);
+            reviewsContainer.addView(reviewView);
+        }
+    }
+
+    private void watchYoutubeVideo(String id){
+        try {
+            Intent youtubeIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + id));
+            startActivity(youtubeIntent);
+        } catch (Exception e){
+            Log.e(LOG_TAG, e.getMessage(), e);
+            Intent youtubeWebIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v="+id));
+            startActivity(youtubeWebIntent);
+        }
     }
 }
