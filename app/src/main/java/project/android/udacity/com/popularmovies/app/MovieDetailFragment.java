@@ -9,8 +9,13 @@ import android.net.Uri;
 import android.os.RemoteException;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.ShareActionProvider;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -37,6 +42,11 @@ public class MovieDetailFragment extends Fragment {
 
     private final String LOG_TAG = MovieDetailFragment.class.getSimpleName();
     private final String MOVIE_BACKDROP_BASE_URI = "http://image.tmdb.org/t/p/";
+
+    private final String SHARE_STRING = "Hey watch this awesome trailer";
+    private final String SHARE_HASHTAG = "#PopularMovies";
+    private final String YOUTUBE_BASE_URL = "http://www.youtube.com/watch?v=";
+
     private Movie selectedMovie = null;
 
     public MovieDetailFragment() {
@@ -46,6 +56,8 @@ public class MovieDetailFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_movie_detail, container, false);
+
+        setHasOptionsMenu(true);
 
         Intent intent = getActivity().getIntent();
         if(intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
@@ -136,6 +148,25 @@ public class MovieDetailFragment extends Fragment {
         //ImageView backdropImageView = (ImageView) rootView.findViewById(R.id.backdrop_imageview);
 
         //Picasso.with(getActivity()).load(buildBackdropPath()).into(backdropImageView);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        if(getActivity().findViewById(R.id.fragment_detail) == null){
+            inflater.inflate(R.menu.detail_fragment, menu);
+            MenuItem menuItem = menu.findItem(R.id.action_share);
+
+            if (menuItem != null) {
+                ShareActionProvider shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+                Intent shareIntent = createShareTrailerIntent();
+
+                if (shareIntent != null) {
+                    shareActionProvider.setShareIntent(shareIntent);
+                }
+
+            }
+        }
     }
 
     private String buildBackdropPath(){
@@ -261,5 +292,20 @@ public class MovieDetailFragment extends Fragment {
             Intent youtubeWebIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.youtube.com/watch?v="+id));
             startActivity(youtubeWebIntent);
         }
+    }
+
+    private Intent createShareTrailerIntent(){
+        if(selectedMovie != null) {
+            ArrayList<Trailer> trailers = selectedMovie.getTrailers();
+            if(trailers.size() > 0){
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, SHARE_STRING + " " + YOUTUBE_BASE_URL + trailers.get(0).getKey() + " " + SHARE_HASHTAG);
+                return shareIntent;
+            }
+        }
+
+        return null;
     }
 }

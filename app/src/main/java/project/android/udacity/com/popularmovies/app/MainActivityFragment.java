@@ -10,9 +10,14 @@ import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.util.Log;
+import android.view.ActionProvider;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -40,6 +45,8 @@ import project.android.udacity.com.popularmovies.app.task.FetchMovieReviewsTask;
 import project.android.udacity.com.popularmovies.app.task.FetchMovieTask;
 import project.android.udacity.com.popularmovies.app.task.FetchMovieTrailersTask;
 
+import android.support.v7.widget.ShareActionProvider;
+
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -52,11 +59,17 @@ public class MainActivityFragment extends Fragment {
     private final String STATE_MOVIES = "state.movies";
     private final String STATE_MOVIE = "state.selected.movie";
 
+    private final String SHARE_STRING = "Hey watch this awesome trailer";
+    private final String SHARE_HASHTAG = "#PopularMovies";
+    private final String YOUTUBE_BASE_URL = "http://www.youtube.com/watch?v=";
+
+
     private GridView mGridView;
     private TextView mMessageTextView;
     private ArrayList<Movie> mMovies = new ArrayList<>();
     private MovieAdapter mMovieAdapter;
     private Movie mSelectedMovie;
+    private MenuItem mMenuItem = null;
 
 
     private String mSelectedOrder = "";
@@ -68,6 +81,7 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        setHasOptionsMenu(true);
         //setRetainInstance(true);
         //getActivity().requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 
@@ -90,22 +104,20 @@ public class MainActivityFragment extends Fragment {
                 mSelectedMovie = mMovieAdapter.getItem(position);
 
                 ArrayList<Trailer> trailersForSelectedMovie = trailersForMovie(mSelectedMovie.getId());
-                if(trailersForSelectedMovie.size() == 0){
-                    try{
+                if (trailersForSelectedMovie.size() == 0) {
+                    try {
                         trailersForSelectedMovie.addAll(new FetchMovieTrailersTask().execute(getString(R.string.api_key), String.valueOf(mSelectedMovie.getId())).get());
-                    }
-                    catch (InterruptedException | ExecutionException e){
+                    } catch (InterruptedException | ExecutionException e) {
                         Log.e(LOG_TAG, e.getMessage(), e);
                     }
 
                 }
 
                 ArrayList<Review> reviewsForSelectedMovie = reviewsForMovies(mSelectedMovie.getId());
-                if(reviewsForSelectedMovie.size() == 0){
-                    try{
+                if (reviewsForSelectedMovie.size() == 0) {
+                    try {
                         reviewsForSelectedMovie.addAll(new FetchMovieReviewsTask().execute(getString(R.string.api_key), String.valueOf(mSelectedMovie.getId())).get());
-                    }
-                    catch (InterruptedException | ExecutionException e){
+                    } catch (InterruptedException | ExecutionException e) {
                         Log.e(LOG_TAG, e.getMessage(), e);
                     }
 
@@ -130,6 +142,16 @@ public class MainActivityFragment extends Fragment {
                     getActivity().getSupportFragmentManager().beginTransaction()
                             .replace(R.id.fragment_detail, movieDetailFragment)
                             .commit();
+
+                    if (mMenuItem != null) {
+                        ShareActionProvider shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(mMenuItem);
+                        Intent shareIntent = createShareTrailerIntent();
+
+                        if (shareIntent != null) {
+                            shareActionProvider.setShareIntent(shareIntent);
+                        }
+
+                    }
                 }
 
             }
@@ -250,6 +272,20 @@ public class MainActivityFragment extends Fragment {
             Log.e(LOG_TAG, "[STOP] current order = preferred order ==> "+(mSelectedOrder.equals(getPreferredOrder())));
 
         }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        //super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.main_fragment, menu);
+
+        if(getActivity().findViewById(R.id.fragment_detail) == null){
+            menu.removeItem(R.id.action_share);
+        }
+
+        mMenuItem = menu.findItem(R.id.action_share);
+
+
     }
 
     public String getPreferredOrder(){
@@ -408,11 +444,26 @@ public class MainActivityFragment extends Fragment {
             review.setContent(cursor.getString(cursor.getColumnIndex(FavoriteMoviesReviewsColumns.CONTENT)));
             review.setMovieId(cursor.getLong(cursor.getColumnIndex(FavoriteMoviesReviewsColumns.MOVIE_ID)));
 
-            Log.e(LOG_TAG, "[REVIEWS] "+review.toString());
+            Log.e(LOG_TAG, "[REVIEWS] " + review.toString());
             result.add(review);
         }
 
         cursor.close();
         return result;
+    }
+
+    private Intent createShareTrailerIntent(){
+        if(mSelectedMovie != null) {
+            ArrayList<Trailer> trailers = mSelectedMovie.getTrailers();
+            if(trailers.size() > 0){
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, SHARE_STRING + " " + YOUTUBE_BASE_URL + trailers.get(0).getKey() + " " + SHARE_HASHTAG);
+                return shareIntent;
+            }
+        }
+
+        return null;
     }
 }

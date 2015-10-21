@@ -8,8 +8,9 @@
     <!-- main activity strings -->
     <string name="progressbar_text">Downloading Movies...</string>
     <string name="download_movies_error">
-        Error while trying to download Movies
+        Error while trying to fetch Movies data
     </string>
+    <string name="action_share">Share</string>
 
     <!-- Settings Activity -->
     <string name="settings_name">Settings</string>
