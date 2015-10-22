@@ -69,7 +69,7 @@ public class MainActivityFragment extends Fragment {
     private ArrayList<Movie> mMovies = new ArrayList<>();
     private MovieAdapter mMovieAdapter;
     private Movie mSelectedMovie;
-    private MenuItem mMenuItem = null;
+    private ShareActionProvider mShareActionProvider = null;
 
 
     private String mSelectedOrder = "";
@@ -143,12 +143,12 @@ public class MainActivityFragment extends Fragment {
                             .replace(R.id.fragment_detail, movieDetailFragment)
                             .commit();
 
-                    if (mMenuItem != null) {
-                        ShareActionProvider shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(mMenuItem);
+                    if (mShareActionProvider != null) {
+
                         Intent shareIntent = createShareTrailerIntent();
 
                         if (shareIntent != null) {
-                            shareActionProvider.setShareIntent(shareIntent);
+                            mShareActionProvider.setShareIntent(shareIntent);
                         }
 
                     }
@@ -283,9 +283,10 @@ public class MainActivityFragment extends Fragment {
             menu.removeItem(R.id.action_share);
         }
 
-        mMenuItem = menu.findItem(R.id.action_share);
-
-
+        MenuItem menuItem = menu.findItem(R.id.action_share);
+        if(menuItem != null){
+            mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+        }
     }
 
     public String getPreferredOrder(){
