@@ -1,5 +1,6 @@
 package project.android.udacity.com.popularmovies.app;
 
+import android.app.FragmentTransaction;
 import android.content.ContentProviderOperation;
 import android.content.Intent;
 import android.content.OperationApplicationException;
@@ -7,7 +8,7 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.RemoteException;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.ShareActionProvider;
@@ -30,10 +31,13 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 
 import project.android.udacity.com.popularmovies.app.data.FavoriteMoviesColumns;
+import project.android.udacity.com.popularmovies.app.data.FavoriteMoviesReviewsColumns;
+import project.android.udacity.com.popularmovies.app.data.FavoriteMoviesTrailersColumns;
 import project.android.udacity.com.popularmovies.app.data.MovieProvider;
 import project.android.udacity.com.popularmovies.app.model.Movie;
 import project.android.udacity.com.popularmovies.app.model.Review;
 import project.android.udacity.com.popularmovies.app.model.Trailer;
+import project.android.udacity.com.popularmovies.app.utility.MovieUtility;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -43,11 +47,9 @@ public class MovieDetailFragment extends Fragment {
     private final String LOG_TAG = MovieDetailFragment.class.getSimpleName();
     private final String MOVIE_BACKDROP_BASE_URI = "http://image.tmdb.org/t/p/";
 
-    private final String SHARE_STRING = "Hey watch this awesome trailer";
-    private final String SHARE_HASHTAG = "#PopularMovies";
-    private final String YOUTUBE_BASE_URL = "http://www.youtube.com/watch?v=";
+    private final String SELECTED_MOVIE_STATE = "state.detail.selected.movie";
 
-    private Movie selectedMovie = null;
+    private Movie mSelectedMovie = null;
 
     public MovieDetailFragment() {
     }
@@ -61,14 +63,14 @@ public class MovieDetailFragment extends Fragment {
 
         Intent intent = getActivity().getIntent();
         if(intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
-            selectedMovie = intent.getParcelableExtra(Intent.EXTRA_TEXT);
+            mSelectedMovie = intent.getParcelableExtra(Intent.EXTRA_TEXT);
         }
         else {
             Bundle arguments = getArguments();
-            selectedMovie = arguments.getParcelable(MainActivityFragment.MOVIE_BUNDLE_KEY);
+            mSelectedMovie = arguments.getParcelable(MainActivityFragment.MOVIE_BUNDLE_KEY);
         }
 
-        Log.e(LOG_TAG, selectedMovie.toString());
+        Log.e(LOG_TAG, mSelectedMovie.toString());
 
         //Toast.makeText(getActivity(), selectedMovie.toString(), Toast.LENGTH_LONG).show();
 
@@ -81,10 +83,10 @@ public class MovieDetailFragment extends Fragment {
             backdropImageView.setScaleType(ImageView.ScaleType.FIT_XY);
         }
 
-        if(selectedMovie != null) {
+        if(mSelectedMovie != null) {
 
             final ImageView imageview_favs = (ImageView) rootView.findViewById(R.id.imageview_favorite);
-            if(checkIfFavorite(selectedMovie.getId())){
+            if(checkIfFavorite(mSelectedMovie.getId())){
                 imageview_favs.setImageResource(R.drawable.fav_yes);
             }
             else {
@@ -94,14 +96,36 @@ public class MovieDetailFragment extends Fragment {
             imageview_favs.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(!checkIfFavorite(selectedMovie.getId())){
-                        saveAsFavorite(selectedMovie);
+                    if(!checkIfFavorite(mSelectedMovie.getId())){
+                        setFavoriteMovie(mSelectedMovie);
                         imageview_favs.setImageResource(R.drawable.fav_yes);
+                        Toast.makeText(getActivity(), getString(R.string.favorite_yes_message),Toast.LENGTH_SHORT).show();
+                        if(getActivity().findViewById(R.id.fragment_detail) != null){
+                            Fragment mainFragment = getActivity().getFragmentManager().findFragmentById(R.id.fragment);
+                            if(mainFragment != null){
+                                FragmentTransaction ft  = getFragmentManager().beginTransaction();
+                                ft.detach(mainFragment);
+                                ft.attach(mainFragment);
+                                ft.commit();
+                            }
+
+                        }
                     }
                     else {
-                        int deleted  = deleteFromFavorite(selectedMovie.getId());
-                        if(deleted > 0){
+                        boolean deleted  = deleteFavorite(mSelectedMovie.getId());
+                        if(deleted){
                             imageview_favs.setImageResource(R.drawable.no_fav);
+                            Toast.makeText(getActivity(), getString(R.string.favorite_no_message),Toast.LENGTH_SHORT).show();
+                            if(getActivity().findViewById(R.id.fragment_detail) != null){
+                                Fragment mainFragment = getActivity().getFragmentManager().findFragmentById(R.id.fragment);
+                                if(mainFragment != null){
+                                    FragmentTransaction ft  = getFragmentManager().beginTransaction();
+                                    ft.detach(mainFragment);
+                                    ft.attach(mainFragment);
+                                    ft.commit();
+                                }
+
+                            }
                         }
                         else {
                             imageview_favs.setImageResource(R.drawable.fav_yes);
@@ -111,29 +135,29 @@ public class MovieDetailFragment extends Fragment {
             });
 
 
-            Log.e(LOG_TAG,""+checkIfFavorite(selectedMovie.getId()));
+            //Log.e(LOG_TAG,""+checkIfFavorite(selectedMovie.getId()));
 
 
             TextView titleTextView = (TextView) rootView.findViewById(R.id.title_textView);
-            titleTextView.setText(selectedMovie.getTitle());
+            titleTextView.setText(mSelectedMovie.getTitle());
 
             TextView plotTextView = (TextView) rootView.findViewById(R.id.plot_textview);
-            plotTextView.setText(selectedMovie.getPlot());
+            plotTextView.setText(mSelectedMovie.getPlot());
 
             TextView releaseDateTextView = (TextView) rootView.findViewById(R.id.release_date_textview);
-            releaseDateTextView.setText(selectedMovie.getReleaseDate());
+            releaseDateTextView.setText(mSelectedMovie.getReleaseDate());
 
             CircleView circleViewVoteAverage = (CircleView) rootView.findViewById(R.id.vote_average_view);
-            circleViewVoteAverage.setTitleText(String.valueOf(selectedMovie.getVoteAverage()));
+            circleViewVoteAverage.setTitleText(String.valueOf(mSelectedMovie.getVoteAverage()));
 
             /*TextView voteAverageTextView = (TextView) rootView.findViewById(R.id.vote_average_textView);
             voteAverageTextView.setText(selectedMovie.getVoteAverage() + "/10");*/
 
-            String backdrop_path = buildBackdropPath();
-            Log.e(LOG_TAG, backdrop_path);
+            //String backdrop_path = buildBackdropPath();
+            //Log.e(LOG_TAG, backdrop_path);
 
-            displayTrailer(selectedMovie.getTrailers(),rootView);
-            displayReviews(selectedMovie.getReviews(),rootView);
+            displayTrailer(mSelectedMovie.getTrailers(),rootView);
+            displayReviews(mSelectedMovie.getReviews(),rootView);
         }
 
         return rootView;
@@ -159,7 +183,7 @@ public class MovieDetailFragment extends Fragment {
 
             if (menuItem != null) {
                 ShareActionProvider shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
-                Intent shareIntent = createShareTrailerIntent();
+                Intent shareIntent = MovieUtility.createShareTrailerIntent(mSelectedMovie);
 
                 if (shareIntent != null) {
                     shareActionProvider.setShareIntent(shareIntent);
@@ -169,11 +193,25 @@ public class MovieDetailFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(SELECTED_MOVIE_STATE, mSelectedMovie);
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if(savedInstanceState != null){
+            mSelectedMovie = savedInstanceState.getParcelable(SELECTED_MOVIE_STATE);
+        }
+    }
+
     private String buildBackdropPath(){
-        if(selectedMovie != null) {
+        if(mSelectedMovie != null) {
             Uri builtUri = Uri.parse(MOVIE_BACKDROP_BASE_URI).buildUpon()
                     .appendPath("w500")
-                    .appendPath(selectedMovie.getBackDrop()).build();
+                    .appendPath(mSelectedMovie.getBackDrop()).build();
             return builtUri.toString();
         }
 
@@ -181,14 +219,28 @@ public class MovieDetailFragment extends Fragment {
     }
 
     private String buildBackdropPathForLandscape(){
-        if(selectedMovie != null) {
+        if(mSelectedMovie != null) {
             Uri builtUri = Uri.parse(MOVIE_BACKDROP_BASE_URI).buildUpon()
                     .appendPath("w500")
-                    .appendPath(selectedMovie.getPoster()).build();
+                    .appendPath(mSelectedMovie.getPoster()).build();
             return builtUri.toString();
         }
 
         return null;
+    }
+
+    private void setFavoriteMovie(Movie movie){
+        saveAsFavorite(movie);
+
+        ArrayList<Trailer> trailers = movie.getTrailers();
+        if(trailers.size() > 0){
+            saveTrailers(trailers);
+        }
+
+        ArrayList<Review> reviews = movie.getReviews();
+        if(reviews.size() > 0){
+            saveReviews(reviews);
+        }
     }
 
     private void saveAsFavorite(Movie movie){
@@ -202,7 +254,7 @@ public class MovieDetailFragment extends Fragment {
         builder.withValue(FavoriteMoviesColumns.POPULARITY,movie.getPopularity());
         builder.withValue(FavoriteMoviesColumns.POSTER,movie.getPoster());
         builder.withValue(FavoriteMoviesColumns.RELEASE_DATE,movie.getReleaseDate());
-        builder.withValue(FavoriteMoviesColumns.TITLE,movie.getTitle());
+        builder.withValue(FavoriteMoviesColumns.TITLE, movie.getTitle());
         builder.withValue(FavoriteMoviesColumns.VOTE_AVERAGE,movie.getVoteAverage());
 
         batchOperation.add(builder.build());
@@ -216,13 +268,58 @@ public class MovieDetailFragment extends Fragment {
         }
     }
 
+    private void saveTrailers(ArrayList<Trailer> trailers){
+        ArrayList<ContentProviderOperation> batchOperation = new ArrayList<>();
+
+        for (Trailer trailer: trailers){
+            ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(MovieProvider.Trailers.CONTENT_URI);
+            builder.withValue(FavoriteMoviesTrailersColumns.MOVIE_ID, trailer.getMovieId());
+            builder.withValue(FavoriteMoviesTrailersColumns.KEY, trailer.getKey());
+            builder.withValue(FavoriteMoviesTrailersColumns.NAME, trailer.getName());
+
+            batchOperation.add(builder.build());
+        }
+
+        try{
+            getActivity().getContentResolver().applyBatch(MovieProvider.AUTHORITY,batchOperation);
+        }
+        catch (RemoteException | OperationApplicationException e){
+            e.printStackTrace();
+        }
+
+    }
+
+    private void saveReviews(ArrayList<Review> reviews){
+        ArrayList<ContentProviderOperation> batchOperation = new ArrayList<>();
+
+        for (Review review: reviews){
+            ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(MovieProvider.Reviews.CONTENT_URI);
+            builder.withValue(FavoriteMoviesReviewsColumns._ID, review.getId());
+            builder.withValue(FavoriteMoviesReviewsColumns.MOVIE_ID, review.getMovieId());
+            builder.withValue(FavoriteMoviesReviewsColumns.AUTHOR, review.getAuthor());
+            builder.withValue(FavoriteMoviesReviewsColumns.CONTENT, review.getContent());
+
+            batchOperation.add(builder.build());
+        }
+
+        try{
+            getActivity().getContentResolver().applyBatch(MovieProvider.AUTHORITY,batchOperation);
+        }
+        catch (RemoteException | OperationApplicationException e){
+            Log.e(LOG_TAG, "exception");
+            e.printStackTrace();
+        }
+
+        //Log.e(LOG_TAG, "fine");
+    }
+
     private boolean checkIfFavorite(long id){
         Cursor cursor = getActivity().getContentResolver().query(
-                            MovieProvider.Favorites.CONTENT_URI,
-                            null,
-                            FavoriteMoviesColumns._ID + " = "+id,
-                            null,
-                            null);
+                MovieProvider.Favorites.CONTENT_URI,
+                null,
+                FavoriteMoviesColumns._ID + " = " + id,
+                null,
+                null);
         try {
             if(cursor.getCount() > 0){
                 cursor.close();
@@ -239,12 +336,42 @@ public class MovieDetailFragment extends Fragment {
         }
     }
 
+    private boolean deleteFavorite(long id){
+        int favoriteDeleted = deleteFromFavorite(id);
+        if(favoriteDeleted > 0) {
+            deleteMovieTrailers(id);
+            deleteMovieReviews(id);
+        }
+
+        return favoriteDeleted > 0;
+
+    }
+
     private int deleteFromFavorite(long id){
-        return getActivity().getContentResolver().delete(
-                MovieProvider.Favorites.CONTENT_URI,
-                FavoriteMoviesColumns._ID +" = "+id,
-                null
-        );
+        return
+            getActivity().getContentResolver().delete(
+                    MovieProvider.Favorites.CONTENT_URI,
+                    FavoriteMoviesColumns._ID + " = " + id,
+                    null
+            );
+    }
+
+    private int deleteMovieTrailers(long id){
+        return
+            getActivity().getContentResolver().delete(
+                    MovieProvider.Trailers.CONTENT_URI,
+                    FavoriteMoviesTrailersColumns.MOVIE_ID + " = " + id,
+                    null
+            );
+    }
+
+    private int deleteMovieReviews(long id){
+        return
+            getActivity().getContentResolver().delete(
+                    MovieProvider.Reviews.CONTENT_URI,
+                    FavoriteMoviesReviewsColumns.MOVIE_ID + " = " + id,
+                    null
+            );
     }
 
     private void displayTrailer(ArrayList<Trailer> trailers, View rootView){
@@ -294,7 +421,7 @@ public class MovieDetailFragment extends Fragment {
         }
     }
 
-    private Intent createShareTrailerIntent(){
+    /*private Intent createShareTrailerIntent(){
         if(selectedMovie != null) {
             ArrayList<Trailer> trailers = selectedMovie.getTrailers();
             if(trailers.size() > 0){
@@ -307,5 +434,5 @@ public class MovieDetailFragment extends Fragment {
         }
 
         return null;
-    }
+    }*/
 }

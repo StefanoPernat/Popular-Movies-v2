@@ -31,4 +31,6 @@
     <string name="plot_text">Plot</string>
     <string name="release_date_text">Release Date</string>
     <string name="vote_average_text">Vote Average</string>
+    <string name="favorite_yes_message">You marked this movie as favorite</string>
+    <string name="favorite_no_message">You deleted this movie from your favorite collection</string>
 </resources>

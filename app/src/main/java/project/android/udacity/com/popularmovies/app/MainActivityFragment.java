@@ -8,7 +8,7 @@ import android.database.Cursor;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.util.Log;
@@ -44,6 +44,7 @@ import project.android.udacity.com.popularmovies.app.model.Trailer;
 import project.android.udacity.com.popularmovies.app.task.FetchMovieReviewsTask;
 import project.android.udacity.com.popularmovies.app.task.FetchMovieTask;
 import project.android.udacity.com.popularmovies.app.task.FetchMovieTrailersTask;
+import project.android.udacity.com.popularmovies.app.utility.MovieUtility;
 
 import android.support.v7.widget.ShareActionProvider;
 
@@ -59,9 +60,6 @@ public class MainActivityFragment extends Fragment {
     private final String STATE_MOVIES = "state.movies";
     private final String STATE_MOVIE = "state.selected.movie";
 
-    private final String SHARE_STRING = "Hey watch this awesome trailer";
-    private final String SHARE_HASHTAG = "#PopularMovies";
-    private final String YOUTUBE_BASE_URL = "http://www.youtube.com/watch?v=";
 
 
     private GridView mGridView;
@@ -139,13 +137,13 @@ public class MainActivityFragment extends Fragment {
                     MovieDetailFragment movieDetailFragment = new MovieDetailFragment();
                     movieDetailFragment.setArguments(selectedMovieBundle);
 
-                    getActivity().getSupportFragmentManager().beginTransaction()
+                    getActivity().getFragmentManager().beginTransaction()
                             .replace(R.id.fragment_detail, movieDetailFragment)
                             .commit();
 
                     if (mShareActionProvider != null) {
 
-                        Intent shareIntent = createShareTrailerIntent();
+                        Intent shareIntent = MovieUtility.createShareTrailerIntent(mSelectedMovie);
 
                         if (shareIntent != null) {
                             mShareActionProvider.setShareIntent(shareIntent);
@@ -262,7 +260,7 @@ public class MainActivityFragment extends Fragment {
                 MovieDetailFragment movieDetailFragment = new MovieDetailFragment();
                 movieDetailFragment.setArguments(selectedMovieBundle);
 
-                getActivity().getSupportFragmentManager().beginTransaction()
+                getActivity().getFragmentManager().beginTransaction()
                         .replace(R.id.fragment_detail,movieDetailFragment)
                         .commit();
             }
@@ -357,27 +355,6 @@ public class MainActivityFragment extends Fragment {
         }
     }
 
-    private void saveTrailers(ArrayList<Trailer> trailers){
-        ArrayList<ContentProviderOperation> batchOperation = new ArrayList<>();
-
-        for (Trailer trailer: trailers){
-            ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(MovieProvider.Trailers.CONTENT_URI);
-            builder.withValue(FavoriteMoviesTrailersColumns.MOVIE_ID, trailer.getMovieId());
-            builder.withValue(FavoriteMoviesTrailersColumns.KEY, trailer.getKey());
-            builder.withValue(FavoriteMoviesTrailersColumns.NAME, trailer.getName());
-
-            batchOperation.add(builder.build());
-        }
-
-        try{
-            getActivity().getContentResolver().applyBatch(MovieProvider.AUTHORITY,batchOperation);
-        }
-        catch (RemoteException | OperationApplicationException e){
-            e.printStackTrace();
-        }
-
-    }
-
     private ArrayList<Trailer> trailersForMovie(long movieId){
         ArrayList<Trailer> result = new ArrayList<>();
 
@@ -401,30 +378,6 @@ public class MainActivityFragment extends Fragment {
 
         cursor.close();
         return result;
-    }
-
-    private void saveReviews(ArrayList<Review> reviews){
-        ArrayList<ContentProviderOperation> batchOperation = new ArrayList<>();
-
-        for (Review review: reviews){
-            ContentProviderOperation.Builder builder = ContentProviderOperation.newInsert(MovieProvider.Reviews.CONTENT_URI);
-            builder.withValue(FavoriteMoviesReviewsColumns._ID, review.getId());
-            builder.withValue(FavoriteMoviesReviewsColumns.MOVIE_ID, review.getMovieId());
-            builder.withValue(FavoriteMoviesReviewsColumns.AUTHOR, review.getAuthor());
-            builder.withValue(FavoriteMoviesReviewsColumns.CONTENT, review.getContent());
-
-            batchOperation.add(builder.build());
-        }
-
-        try{
-            getActivity().getContentResolver().applyBatch(MovieProvider.AUTHORITY,batchOperation);
-        }
-        catch (RemoteException | OperationApplicationException e){
-            Log.e(LOG_TAG, "exception");
-            e.printStackTrace();
-        }
-
-        Log.e(LOG_TAG, "fine");
     }
 
     private ArrayList<Review> reviewsForMovies(long movieId){
@@ -451,20 +404,5 @@ public class MainActivityFragment extends Fragment {
 
         cursor.close();
         return result;
-    }
-
-    private Intent createShareTrailerIntent(){
-        if(mSelectedMovie != null) {
-            ArrayList<Trailer> trailers = mSelectedMovie.getTrailers();
-            if(trailers.size() > 0){
-                Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-                shareIntent.setType("text/plain");
-                shareIntent.putExtra(Intent.EXTRA_TEXT, SHARE_STRING + " " + YOUTUBE_BASE_URL + trailers.get(0).getKey() + " " + SHARE_HASHTAG);
-                return shareIntent;
-            }
-        }
-
-        return null;
     }
 }
