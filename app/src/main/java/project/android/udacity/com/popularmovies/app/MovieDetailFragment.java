@@ -306,8 +306,7 @@ public class MovieDetailFragment extends Fragment {
             getActivity().getContentResolver().applyBatch(MovieProvider.AUTHORITY,batchOperation);
         }
         catch (RemoteException | OperationApplicationException e){
-            Log.e(LOG_TAG, "exception");
-            e.printStackTrace();
+            Log.e(LOG_TAG, e.getMessage(),e);
         }
 
         //Log.e(LOG_TAG, "fine");

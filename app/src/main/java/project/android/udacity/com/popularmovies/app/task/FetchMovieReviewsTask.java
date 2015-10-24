@@ -27,7 +27,7 @@ public class FetchMovieReviewsTask extends AsyncTask<String,Void,ArrayList<Revie
     private static final String MOVIE_REVIEWS_BASE_URL =
             "http://api.themoviedb.org/3/movie/";
 
-    private static final String JSON_RESULT_ARRAY = "result";
+    private static final String JSON_RESULT_ARRAY = "results";
     private static final String JSON_REVIEW_ID = "id";
     private static final String JSON_REVIEW_AUTHOR = "author";
     private static final String JSON_REVIEW_CONTENT = "content";
@@ -108,7 +108,7 @@ public class FetchMovieReviewsTask extends AsyncTask<String,Void,ArrayList<Revie
 
         try {
                 jsonRoot = new JSONObject(jsonString);
-                JSONArray jsonReviewsArray = jsonRoot.getJSONArray("results");
+                JSONArray jsonReviewsArray = jsonRoot.getJSONArray(JSON_RESULT_ARRAY);
                 for (int k=0; k < jsonReviewsArray.length(); k++){
                     JSONObject jsonReview = jsonReviewsArray.getJSONObject(k);
                     String id, author, content;
@@ -123,7 +123,7 @@ public class FetchMovieReviewsTask extends AsyncTask<String,Void,ArrayList<Revie
             }
 
         } catch (JSONException e){
-            Log.e(LOG_TAG, e.getMessage());
+            Log.e(LOG_TAG, e.getMessage(),e);
             result = new ArrayList<>();
         }
 

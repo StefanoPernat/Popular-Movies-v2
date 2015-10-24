@@ -5,6 +5,7 @@ import android.os.Parcelable;
 
 /**
  * Created by stefanopernat on 17/10/15.
+ * The review class
  */
 public class Review implements Parcelable{
     private String mId;

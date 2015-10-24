@@ -129,7 +129,7 @@ public class MainActivityFragment extends Fragment {
                     movieDetailIntent.putExtra(Intent.EXTRA_TEXT, mSelectedMovie);
                     startActivity(movieDetailIntent);
                 } else {
-                    Toast.makeText(getActivity(), "Hi Master Detail", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getActivity(), "Hi Master Detail", Toast.LENGTH_LONG).show();
                     Bundle selectedMovieBundle = new Bundle();
                     selectedMovieBundle.putParcelable(MOVIE_BUNDLE_KEY, mSelectedMovie);
 
@@ -209,9 +209,9 @@ public class MainActivityFragment extends Fragment {
 
         }*/
 
-        Log.e(LOG_TAG, "[START] selectedOrder: " + mSelectedOrder);
-        Log.e(LOG_TAG, "[START] preferredOrder: " + getPreferredOrder());
-        Log.e(LOG_TAG, "[START] current order = preferred order ==> " + (mSelectedOrder.equals(getPreferredOrder())));
+        //Log.e(LOG_TAG, "[START] selectedOrder: " + mSelectedOrder);
+        //Log.e(LOG_TAG, "[START] preferredOrder: " + getPreferredOrder());
+        //Log.e(LOG_TAG, "[START] current order = preferred order ==> " + (mSelectedOrder.equals(getPreferredOrder())));
 
         ArrayList<Movie> movies = new ArrayList<>();
         if(getActivity() != null){
@@ -265,9 +265,9 @@ public class MainActivityFragment extends Fragment {
                         .commit();
             }
 
-            Log.e(LOG_TAG, "[STOP] selectedOrder: "+mSelectedOrder);
-            Log.e(LOG_TAG, "[STOP] preferredOrder: "+getPreferredOrder());
-            Log.e(LOG_TAG, "[STOP] current order = preferred order ==> "+(mSelectedOrder.equals(getPreferredOrder())));
+            //Log.e(LOG_TAG, "[STOP] selectedOrder: "+mSelectedOrder);
+            //Log.e(LOG_TAG, "[STOP] preferredOrder: "+getPreferredOrder());
+            //Log.e(LOG_TAG, "[STOP] current order = preferred order ==> "+(mSelectedOrder.equals(getPreferredOrder())));
 
         }
     }
@@ -322,6 +322,8 @@ public class MainActivityFragment extends Fragment {
             result.add(movie);
         }
 
+        Log.e(LOG_TAG, "Fetching favorites from content provider: "+favorites);
+
         if(favorites > 0){
             cursor.close();
             return result;
@@ -366,17 +368,20 @@ public class MainActivityFragment extends Fragment {
                 null
         );
 
+        int trailerCount = cursor.getCount();
+
         while (cursor.moveToNext()){
             Trailer t = new Trailer();
             t.setKey(cursor.getString(cursor.getColumnIndex(FavoriteMoviesTrailersColumns.KEY)));
             t.setName(cursor.getString(cursor.getColumnIndex(FavoriteMoviesTrailersColumns.NAME)));
             t.setMovieId(cursor.getLong(cursor.getColumnIndex(FavoriteMoviesTrailersColumns.MOVIE_ID)));
 
-            Log.e(LOG_TAG, "[TRAILER] "+t.toString());
+            //Log.e(LOG_TAG, "[TRAILER] "+t.toString());
             result.add(t);
         }
 
         cursor.close();
+        Log.e(LOG_TAG, "Fetching trailers from content provider "+trailerCount);
         return result;
     }
 
@@ -391,6 +396,8 @@ public class MainActivityFragment extends Fragment {
                 null
         );
 
+        int reviewsCount = cursor.getCount();
+
         while (cursor.moveToNext()){
             Review review = new Review();
             review.setId(cursor.getString(cursor.getColumnIndex(FavoriteMoviesReviewsColumns._ID)));
@@ -398,11 +405,12 @@ public class MainActivityFragment extends Fragment {
             review.setContent(cursor.getString(cursor.getColumnIndex(FavoriteMoviesReviewsColumns.CONTENT)));
             review.setMovieId(cursor.getLong(cursor.getColumnIndex(FavoriteMoviesReviewsColumns.MOVIE_ID)));
 
-            Log.e(LOG_TAG, "[REVIEWS] " + review.toString());
+            //Log.e(LOG_TAG, "[REVIEWS] " + review.toString());
             result.add(review);
         }
 
         cursor.close();
+        Log.e(LOG_TAG, "Fetching reviews from content provider " + reviewsCount);
         return result;
     }
 }

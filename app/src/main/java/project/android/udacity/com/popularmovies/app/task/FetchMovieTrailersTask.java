@@ -117,11 +117,11 @@ public class FetchMovieTrailersTask extends AsyncTask<String, Void, ArrayList<Tr
 
                 Trailer t = new Trailer(movieId,key,title);
                 result.add(t);
-                Log.e(LOG_TAG, t.toString());
+                //Log.e(LOG_TAG, t.toString());
             }
         } catch (Exception e){
             result = new ArrayList<>();
-            e.printStackTrace();
+            Log.e(LOG_TAG,e.getMessage(),e);
         }
 
         return result;
