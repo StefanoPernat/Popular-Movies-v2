@@ -12,7 +12,7 @@ Change implementation from intent service to AsyncTask as suggested by reviewer
 1. Basic version of MovieService **[COMPLETED]**
 2. Movie class as Model **[COMPLETED]**
 3. Implement the JSON parser **[COMPLETED]**
-~~4. Implement DownloadReceiver to notify MainActivity when MovieService return **[COMPLETED]** ~~
+~~ 4. Implement DownloadReceiver to notify MainActivity when MovieService return **[COMPLETED]** ~~
 5. Built some basic UI, and custom adapter **[COMPLETED]**
 6. _Fixed_ GridView spacing **[COMPLETED]**
 7. Basic UI for Detail Activity **[COMPLETED]**
